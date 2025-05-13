@@ -9,6 +9,8 @@ import 'leaflet.markercluster/dist/MarkerCluster.css' // 引入 MarkerCluster �
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css' // 引入 MarkerCluster 預設樣式
 import '@/assets/css/base.css'
 import VueClipboard from 'vue3-clipboard'
+import SvgIcon from './components/SvgIcon.vue'
+import 'virtual:svg-icons-register'
 
 const app = createApp(App)
 
@@ -19,4 +21,5 @@ app.use(VueClipboard, {
   autoSetContainer: true,
   appendToBody: true,
 })
+app.component('SvgIcon', SvgIcon)
 app.mount('#app')
