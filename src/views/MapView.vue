@@ -9,13 +9,14 @@ import PostcardModal from '@/components/PostcardModal.vue'
 import LightboxStrip from '@/components/LightboxStrip.vue'
 import ResetPasswordModal from '@/components/ResetPasswordModal.vue'
 
+import { useAuthFlow } from '@/composables/useAuthFlow'
 import { useAppMessage } from '@/composables/useAppMessage'
-import Cookies from 'js-cookie'
+
 import axios from '@/plugins/axios'
-import { useRouter } from 'vue-router'
-const router = useRouter()
 
 const { successMsg, errorMsg } = useAppMessage()
+const { signOut } = useAuthFlow()
+
 const infoStore = useInfoStore()
 const { fetchUserData } = infoStore
 const { userData } = storeToRefs(infoStore)
@@ -61,6 +62,7 @@ const handleSelect = async (key) => {
       break
     }
     case 'logout': {
+      handleLogout()
       console.log('logout')
       break
     }
@@ -76,10 +78,9 @@ onMounted(async () => {
 const handleResetPassword = async (id, data) => {
   try {
     const res = await axios.put(`/user/reset-password/${id}`, data)
-    Cookies.remove('token')
     successMsg(res.data.message)
     closeModal('resetPassword')
-    router.push('/login')
+    signOut()
   } catch (err) {
     const errorMessage = err.response?.data?.message
     if (Array.isArray(errorMessage)) {
@@ -89,6 +90,17 @@ const handleResetPassword = async (id, data) => {
     }
   } finally {
     modalLoading.value = false
+  }
+}
+
+// 登出
+const handleLogout = async () => {
+  try {
+    const res = await axios.post('/user/logout')
+    successMsg(res.data.message)
+    signOut()
+  } catch (err) {
+    errorMsg(err.response?.data?.message || '操作失敗')
   }
 }
 </script>
