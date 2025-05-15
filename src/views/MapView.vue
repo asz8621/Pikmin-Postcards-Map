@@ -5,6 +5,8 @@ import { useInfoStore } from '@/stores/info'
 import { useMapStore } from '@/stores/map'
 import LeafletMap from '@/components/LeafletMap.vue'
 import PostcardModal from '@/components/PostcardModal.vue'
+import LightboxStrip from '@/components/LightboxStrip.vue'
+
 import { useAppMessage } from '@/composables/useAppMessage'
 
 const { successMsg, errorMsg } = useAppMessage()
@@ -91,6 +93,8 @@ onMounted(async () => {
       <div class="map-wrapper">
         <LeafletMap v-if="mapAllData.length" />
       </div>
+
+      <LightboxStrip />
 
       <PostcardModal />
     </n-layout-content>
