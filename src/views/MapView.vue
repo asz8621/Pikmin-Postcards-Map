@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/info'
 import { useMapStore } from '@/stores/map'
 import LeafletMap from '@/components/LeafletMap.vue'
+import PostcardModal from '@/components/PostcardModal.vue'
 import { useAppMessage } from '@/composables/useAppMessage'
 
 const { successMsg, errorMsg } = useAppMessage()
@@ -90,6 +91,8 @@ onMounted(async () => {
       <div class="map-wrapper">
         <LeafletMap v-if="mapAllData.length" />
       </div>
+
+      <PostcardModal />
     </n-layout-content>
   </n-layout>
 </template>

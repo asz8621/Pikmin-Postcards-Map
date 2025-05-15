@@ -10,6 +10,7 @@ import questionMark from '@/assets/images/question-mark.png'
 
 import { useMapStore } from '@/stores/map'
 import { useInfoStore } from '@/stores/info'
+import { useModalStore } from '@/stores/modal'
 import { storeToRefs } from 'pinia'
 
 const mapStore = useMapStore()
@@ -18,6 +19,9 @@ const { applyFilter, setVisibleItems } = mapStore
 
 const infoStore = useInfoStore()
 const { features } = storeToRefs(infoStore)
+
+const modalStore = useModalStore()
+const { openModal } = modalStore
 
 let map = null
 const zoomLevel = ref(16)
@@ -120,6 +124,7 @@ const renderMarkers = (data) => {
     const marker = L.marker([item.lat, item.long], {
       icon: setIcon(item.type),
     })
+    marker.on('click', () => openModal(item))
     markers.addLayer(marker)
   })
 
