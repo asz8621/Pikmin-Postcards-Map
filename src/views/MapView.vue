@@ -3,13 +3,17 @@ import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/info'
 import { useMapStore } from '@/stores/map'
+import LeafletMap from '@/components/LeafletMap.vue'
+import { useAppMessage } from '@/composables/useAppMessage'
 
+const { successMsg, errorMsg } = useAppMessage()
 const infoStore = useInfoStore()
 const { fetchUserData } = infoStore
 const { userData } = storeToRefs(infoStore)
 
 const mapStore = useMapStore()
 const { fetchMapData } = mapStore
+const { mapAllData } = storeToRefs(mapStore)
 
 const options = [
   {
@@ -29,6 +33,30 @@ const options = [
     key: 'logout',
   },
 ]
+const handleSelect = async (key) => {
+  try {
+    switch (key) {
+      case 'contribute': {
+        console.log('contribute')
+        break
+      }
+      case 'upload': {
+        console.log('upload')
+        break
+      }
+      case 'changePassword': {
+        console.log('changePassword')
+        break
+      }
+      case 'logout': {
+        console.log('logout')
+        break
+      }
+    }
+  } catch (err) {
+    errorMsg(err.response?.data?.message || '操作失敗')
+  }
+}
 
 onMounted(async () => {
   await fetchUserData()
@@ -58,6 +86,11 @@ onMounted(async () => {
         </n-dropdown>
       </div>
     </n-layout-header>
+    <n-layout-content>
+      <div class="map-wrapper">
+        <LeafletMap v-if="mapAllData.length" />
+      </div>
+    </n-layout-content>
   </n-layout>
 </template>
 
@@ -77,5 +110,11 @@ $headerHeight: 72px;
 }
 .logo {
   margin-right: auto;
+}
+.map-wrapper {
+  width: 100%;
+  height: calc(100vh - $headerHeight);
+  position: relative;
+  z-index: 1;
 }
 </style>
