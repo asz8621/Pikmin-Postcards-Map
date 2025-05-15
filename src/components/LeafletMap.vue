@@ -124,7 +124,7 @@ const renderMarkers = (data) => {
     const marker = L.marker([item.lat, item.long], {
       icon: setIcon(item.type),
     })
-    marker.on('click', () => openModal(item))
+    marker.on('click', () => openModal('postcard', item))
     markers.addLayer(marker)
   })
 

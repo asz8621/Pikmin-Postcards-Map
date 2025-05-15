@@ -30,7 +30,7 @@ const modeText = computed(() => {
       :src="item.image"
       width="64"
       preview-disabled
-      @click="openModal(item)"
+      @click="openModal('postcard', item)"
     />
     <div v-if="mapData.length < 1" class="emptyText">附近沒有好看的景點</div>
   </n-space>

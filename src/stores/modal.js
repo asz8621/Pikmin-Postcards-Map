@@ -2,21 +2,30 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
 export const useModalStore = defineStore('modal', () => {
-  const selectedData = ref(null)
-  const showModal = ref(false)
+  const modalLoading = ref(false)
+  // 如果需要共用選擇的資料
+  const modalData = ref(null)
+  // 用物件來管理不同 modal 的顯示狀態
+  const modalStates = ref({
+    postcard: false,
+    resetPassword: false,
+  })
 
-  const openModal = (data) => {
-    selectedData.value = data
-    showModal.value = true
+  // 用來開啟指定的 modal
+  const openModal = (modalName, data = null) => {
+    modalStates.value[modalName] = true
+    modalData.value = data
   }
 
-  const closeModal = () => {
-    showModal.value = false
+  // 用來關閉指定的 modal
+  const closeModal = (modalName) => {
+    modalStates.value[modalName] = false
   }
 
   return {
-    selectedData,
-    showModal,
+    modalLoading,
+    modalStates,
+    modalData,
     openModal,
     closeModal,
   }

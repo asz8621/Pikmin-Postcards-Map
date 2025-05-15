@@ -11,7 +11,7 @@ const { successMsg, errorMsg } = useAppMessage()
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
-const { selectedData, showModal } = storeToRefs(modalStore)
+const { modalData, modalStates } = storeToRefs(modalStore)
 
 const getTypeIcon = (type) => {
   switch (type) {
@@ -25,7 +25,7 @@ const getTypeIcon = (type) => {
 }
 
 // 取得經緯度字串
-const coordinates = computed(() => `${selectedData.value?.lat}, ${selectedData.value?.long}`)
+const coordinates = computed(() => `${modalData.value?.lat}, ${modalData.value?.long}`)
 
 // n-image 預覽圖工具列
 const customToolbar = ({ nodes }) => {
@@ -50,11 +50,11 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
 </script>
 
 <template>
-  <n-modal v-model:show="showModal" preset="card" :mask-closable="false" class="modal">
+  <n-modal v-model:show="modalStates.postcard" preset="card" :mask-closable="false" class="modal">
     <template #header>
       <div class="place" style="display: flex; align-items: center">
         <img
-          :src="getTypeIcon(selectedData?.type)"
+          :src="getTypeIcon(modalData?.type)"
           alt=""
           width="24"
           height="24"
@@ -67,10 +67,10 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
 
     <div class="modal-content">
       <div class="modal-left">
-        <n-image :src="selectedData?.image" width="100%" :render-toolbar="customToolbar" />
+        <n-image :src="modalData?.image" width="100%" :render-toolbar="customToolbar" />
 
         <n-space size="small" wrap>
-          <n-tag v-for="item in selectedData?.features" :key="item.id" type="info" size="small">
+          <n-tag v-for="item in modalData?.features" :key="item.id" type="info" size="small">
             {{ item.name }}
           </n-tag>
         </n-space>
@@ -78,11 +78,11 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
 
       <div class="modal-right">
         <div class="placeLocation">
-          <h3>{{ selectedData?.name }}</h3>
-          <span class="smallText">{{ selectedData?.country }}, {{ selectedData?.city }}</span>
+          <h3>{{ modalData?.name }}</h3>
+          <span class="smallText">{{ modalData?.country }}, {{ modalData?.city }}</span>
         </div>
         <n-space align="center" style="margin: 0.5rem 0">
-          <span class="coordinates">{{ selectedData?.lat }}, {{ selectedData?.long }}</span>
+          <span class="coordinates">{{ modalData?.lat }}, {{ modalData?.long }}</span>
           <n-button
             quaternary
             circle
@@ -98,7 +98,7 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
     </div>
 
     <template #footer>
-      <n-button block type="default" @click="closeModal">關閉</n-button>
+      <n-button block type="default" @click="closeModal('postcard')">關閉</n-button>
     </template>
   </n-modal>
 </template>
