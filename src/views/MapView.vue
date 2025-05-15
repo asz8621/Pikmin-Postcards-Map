@@ -3,11 +3,17 @@ import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/info'
 import { useMapStore } from '@/stores/map'
+import { useModalStore } from '@/stores/modal'
 import LeafletMap from '@/components/LeafletMap.vue'
 import PostcardModal from '@/components/PostcardModal.vue'
 import LightboxStrip from '@/components/LightboxStrip.vue'
+import ResetPasswordModal from '@/components/ResetPasswordModal.vue'
 
 import { useAppMessage } from '@/composables/useAppMessage'
+import Cookies from 'js-cookie'
+import axios from '@/plugins/axios'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 const { successMsg, errorMsg } = useAppMessage()
 const infoStore = useInfoStore()
@@ -17,6 +23,10 @@ const { userData } = storeToRefs(infoStore)
 const mapStore = useMapStore()
 const { fetchMapData } = mapStore
 const { mapAllData } = storeToRefs(mapStore)
+
+const modalStore = useModalStore()
+const { closeModal } = modalStore
+const { modalStates, modalLoading } = storeToRefs(modalStore)
 
 const options = [
   {
@@ -37,27 +47,23 @@ const options = [
   },
 ]
 const handleSelect = async (key) => {
-  try {
-    switch (key) {
-      case 'contribute': {
-        console.log('contribute')
-        break
-      }
-      case 'upload': {
-        console.log('upload')
-        break
-      }
-      case 'changePassword': {
-        console.log('changePassword')
-        break
-      }
-      case 'logout': {
-        console.log('logout')
-        break
-      }
+  switch (key) {
+    case 'contribute': {
+      console.log('contribute')
+      break
     }
-  } catch (err) {
-    errorMsg(err.response?.data?.message || '操作失敗')
+    case 'upload': {
+      console.log('upload')
+      break
+    }
+    case 'changePassword': {
+      modalStates.value.resetPassword = true
+      break
+    }
+    case 'logout': {
+      console.log('logout')
+      break
+    }
   }
 }
 
@@ -65,6 +71,26 @@ onMounted(async () => {
   await fetchUserData()
   await fetchMapData()
 })
+
+// 修改密碼
+const handleResetPassword = async (id, data) => {
+  try {
+    const res = await axios.put(`/user/reset-password/${id}`, data)
+    Cookies.remove('token')
+    successMsg(res.data.message)
+    closeModal('resetPassword')
+    router.push('/login')
+  } catch (err) {
+    const errorMessage = err.response?.data?.message
+    if (Array.isArray(errorMessage)) {
+      errorMessage.forEach((msg) => errorMsg(msg))
+    } else {
+      errorMsg(errorMessage || '操作失敗')
+    }
+  } finally {
+    modalLoading.value = false
+  }
+}
 </script>
 
 <template>
@@ -97,6 +123,8 @@ onMounted(async () => {
       <LightboxStrip />
 
       <PostcardModal />
+
+      <ResetPasswordModal @handleResetPassword="handleResetPassword" />
     </n-layout-content>
   </n-layout>
 </template>
