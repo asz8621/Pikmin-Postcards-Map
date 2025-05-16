@@ -8,6 +8,7 @@ import LeafletMap from '@/components/LeafletMap.vue'
 import PostcardModal from '@/components/PostcardModal.vue'
 import LightboxStrip from '@/components/LightboxStrip.vue'
 import ResetPasswordModal from '@/components/ResetPasswordModal.vue'
+import UploadLocationModal from '@/components/UploadLocationModal.vue'
 
 import { useAuthFlow } from '@/composables/useAuthFlow'
 import { useAppMessage } from '@/composables/useAppMessage'
@@ -36,7 +37,7 @@ const options = [
   },
   {
     label: '上傳點位',
-    key: 'upload',
+    key: 'uploadLocation',
   },
   {
     label: '修改密碼',
@@ -53,8 +54,8 @@ const handleSelect = async (key) => {
       console.log('contribute')
       break
     }
-    case 'upload': {
-      console.log('upload')
+    case 'uploadLocation': {
+      modalStates.value.uploadLocation = true
       break
     }
     case 'changePassword': {
@@ -63,7 +64,6 @@ const handleSelect = async (key) => {
     }
     case 'logout': {
       handleLogout()
-      console.log('logout')
       break
     }
   }
@@ -103,6 +103,25 @@ const handleLogout = async () => {
     errorMsg(err.response?.data?.message || '操作失敗')
   }
 }
+
+// 上傳點位
+const handleUploadLocation = async (data) => {
+  try {
+    const res = await axios.post('/user/locations', data)
+    successMsg(res.data.message)
+    closeModal('uploadLocation')
+    await fetchUserData()
+  } catch (error) {
+    const errorMessage = error.response?.data?.message
+    if (Array.isArray(errorMessage)) {
+      errorMessage.forEach((msg) => errorMsg(msg))
+    } else {
+      errorMsg(errorMessage || '操作失敗')
+    }
+  } finally {
+    modalLoading.value = false
+  }
+}
 </script>
 
 <template>
@@ -137,6 +156,8 @@ const handleLogout = async () => {
       <PostcardModal />
 
       <ResetPasswordModal @handleResetPassword="handleResetPassword" />
+
+      <UploadLocationModal @handleUploadLocation="handleUploadLocation" />
     </n-layout-content>
   </n-layout>
 </template>
