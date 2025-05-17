@@ -26,6 +26,9 @@ import {
   NEmpty,
   NPopover,
   NAlert,
+  NRadioGroup,
+  NRadioButton,
+  NText,
 } from 'naive-ui'
 
 export const naive = create({
@@ -56,5 +59,8 @@ export const naive = create({
     NEmpty,
     NPopover,
     NAlert,
+    NRadioGroup,
+    NRadioButton,
+    NText,
   ],
 })
