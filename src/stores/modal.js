@@ -10,6 +10,9 @@ export const useModalStore = defineStore('modal', () => {
     postcard: false,
     resetPassword: false,
     uploadLocation: false,
+    contribute: false,
+    editLocation: false,
+    deleteLocation: false,
   })
 
   // 用來開啟指定的 modal

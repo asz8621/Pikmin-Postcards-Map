@@ -9,6 +9,7 @@ import PostcardModal from '@/components/PostcardModal.vue'
 import LightboxStrip from '@/components/LightboxStrip.vue'
 import ResetPasswordModal from '@/components/ResetPasswordModal.vue'
 import UploadLocationModal from '@/components/UploadLocationModal.vue'
+import ContributeDrawer from '@/components/contribute/ContributeDrawer.vue'
 
 import { useAuthFlow } from '@/composables/useAuthFlow'
 import { useAppMessage } from '@/composables/useAppMessage'
@@ -51,7 +52,7 @@ const options = [
 const handleSelect = async (key) => {
   switch (key) {
     case 'contribute': {
-      console.log('contribute')
+      modalStates.value.contribute = true
       break
     }
     case 'uploadLocation': {
@@ -158,6 +159,8 @@ const handleUploadLocation = async (data) => {
       <ResetPasswordModal @handleResetPassword="handleResetPassword" />
 
       <UploadLocationModal @handleUploadLocation="handleUploadLocation" />
+
+      <ContributeDrawer />
     </n-layout-content>
   </n-layout>
 </template>

@@ -1,27 +1,26 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppMessage } from '@/composables/useAppMessage'
+import { useInfoStore } from '@/stores/info'
 import { useModalStore } from '@/stores/modal'
+import axios from '@/plugins/axios'
 
-const emit = defineEmits(['handleUploadLocation'])
-
-const { errorMsg } = useAppMessage()
+const { successMsg, errorMsg } = useAppMessage()
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
-const { modalStates, modalLoading } = storeToRefs(modalStore)
+const { modalStates, modalData, modalLoading } = storeToRefs(modalStore)
 
-const uploadLocationRef = ref(null)
-const locationFormData = ref({
-  image: null,
-  type: null,
-  coords: null,
-  explore: false,
-})
+const infoStore = useInfoStore()
+const { fetchUserData } = infoStore
+
+const editLocationRef = ref(null)
+const locationFormData = ref({})
 const maxSizeMB = 5
 const maxSizeBytes = maxSizeMB * 1024 * 1024
 const allowedTypes = ['image/png', 'image/jpeg']
+const imageUrl = ref('')
 
 const rules = {
   image: [
@@ -29,6 +28,9 @@ const rules = {
       key: 'image',
       required: true,
       validator: (_, value) => {
+        console.log('value', value)
+        if (typeof value === 'string') return true
+
         const result = validateImageFile(value)
         return result
       },
@@ -65,19 +67,16 @@ const rules = {
   ],
 }
 
-// 清除表單資料
-const resetLocationFormData = () => {
-  for (let key in locationFormData.value) {
-    if (key === 'explore') {
-      locationFormData.value[key] = false
-    } else {
-      locationFormData.value[key] = null
-    }
-  }
-}
+const submitText = computed(() => {
+  return locationFormData.value.image_status === 'rejected' ? '重新送審' : '送出'
+})
 
 // 檢查檔案格式
 function validateImageFile(file) {
+  if (!file) {
+    locationFormData.value.image = imageUrl.value
+    return true
+  }
   const fileSize = file.file.size
   const fileType = file.type
   const fileName = file.name
@@ -112,14 +111,14 @@ const beforeUpload = (fileData) => {
 // 暫存圖片到表單資料
 const customUpload = ({ file, onFinish }) => {
   locationFormData.value.image = file
-  uploadLocationRef.value?.validate(null, (rule) => rule?.key === 'image').catch(() => {})
+  editLocationRef.value?.validate(null, (rule) => rule?.key === 'image').catch(() => {})
   onFinish()
 }
 
 // 移除上傳檔案
 const handleRemove = () => {
   locationFormData.value.image = null
-  uploadLocationRef.value?.validate(null, (rule) => rule?.key === 'image').catch(() => {})
+  editLocationRef.value?.validate(null, (rule) => rule?.key === 'image').catch(() => {})
 }
 
 // 取得經緯度
@@ -131,11 +130,11 @@ const getCoordinates = (input) => {
   return { lat, long }
 }
 
-const handleUploadLocation = async () => {
+const handleEditLocation = async () => {
   if (modalLoading.value) return
 
   try {
-    await uploadLocationRef.value?.validate()
+    await editLocationRef.value?.validate()
   } catch {
     errorMsg('請確認資料是否填寫齊全無誤')
     return
@@ -146,25 +145,47 @@ const handleUploadLocation = async () => {
   locationFormData.value.long = long
 
   const apiData = { ...locationFormData.value }
-  apiData.image = locationFormData.value.image.file
+  if (typeof apiData.image !== 'string') apiData.image = locationFormData.value.image.file
   delete apiData.coords
 
   const formData = new FormData()
   for (const [key, value] of Object.entries(apiData)) {
     formData.append(key, value)
   }
-
   modalLoading.value = true
 
-  emit('handleUploadLocation', formData)
+  try {
+    const res = await axios.put(`/user/locations/${apiData.id}`, formData)
+    await fetchUserData()
+    successMsg(res?.data?.message || '更新成功')
+    closeModal('editLocation')
+  } catch (err) {
+    errorMsg(err.response?.data?.message || '更新失敗')
+  } finally {
+    modalLoading.value = false
+  }
 }
 
 // 關閉清除資料
 watch(
-  () => modalStates.value.uploadLocation,
+  () => modalStates.value.editLocation,
   (newVal, oldVal) => {
+    if (newVal) {
+      const { id, explore, image, lat, long, type, image_status } = modalData.value
+      locationFormData.value = {
+        id,
+        explore,
+        image,
+        type,
+        lat,
+        long,
+        coords: `${lat}, ${long}`,
+        image_status,
+      }
+      imageUrl.value = image
+    }
     if (oldVal && !newVal) {
-      resetLocationFormData()
+      locationFormData.value = {}
     }
   },
 )
@@ -172,7 +193,7 @@ watch(
 
 <template>
   <n-modal
-    v-model:show="modalStates.uploadLocation"
+    v-model:show="modalStates.editLocation"
     title="上傳資料"
     preset="dialog"
     :mask-closable="false"
@@ -180,7 +201,7 @@ watch(
     class="modal"
   >
     <n-form
-      ref="uploadLocationRef"
+      ref="editLocationRef"
       :model="locationFormData"
       :rules="rules"
       label-placement="top"
@@ -199,6 +220,7 @@ watch(
               <img src="@/assets/images/upload_example.png" alt="" height="200" />
             </div>
           </n-popover>
+          <img :src="imageUrl" alt="" style="max-height: 300px; margin-top: 0.5rem" />
         </template>
         <n-upload
           accept=".png,.jpg"
@@ -208,7 +230,7 @@ watch(
           :on-before-upload="beforeUpload"
           :on-remove="handleRemove"
         >
-          <n-button>上傳圖片</n-button>
+          <n-button>重新上傳圖片</n-button>
         </n-upload>
       </n-form-item>
 
@@ -231,13 +253,13 @@ watch(
         <n-switch v-model:value="locationFormData.explore" />
       </n-form-item>
       <n-space justify="end">
-        <n-button type="primary" @click="handleUploadLocation" :disabled="modalLoading">
-          送出
+        <n-button type="primary" @click="handleEditLocation" :disabled="modalLoading">
+          {{ submitText }}
         </n-button>
         <n-button
           type="tertiary"
           secondary
-          @click="closeModal('uploadLocation')"
+          @click="closeModal('editLocation')"
           :disabled="modalLoading"
         >
           關閉
