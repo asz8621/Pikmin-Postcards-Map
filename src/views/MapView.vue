@@ -10,6 +10,7 @@ import LightboxStrip from '@/components/LightboxStrip.vue'
 import ResetPasswordModal from '@/components/ResetPasswordModal.vue'
 import UploadLocationModal from '@/components/UploadLocationModal.vue'
 import ContributeDrawer from '@/components/contribute/ContributeDrawer.vue'
+import UserInfoModal from '@/components/UserInfoModal.vue'
 
 import { useAuthFlow } from '@/composables/useAuthFlow'
 import { useAppMessage } from '@/composables/useAppMessage'
@@ -33,6 +34,10 @@ const { modalStates, modalLoading } = storeToRefs(modalStore)
 
 const options = [
   {
+    label: '個人資料',
+    key: 'userInfo',
+  },
+  {
     label: '我的貢獻',
     key: 'contribute',
   },
@@ -51,6 +56,10 @@ const options = [
 ]
 const handleSelect = async (key) => {
   switch (key) {
+    case 'userInfo': {
+      modalStates.value.userInfo = true
+      break
+    }
     case 'contribute': {
       modalStates.value.contribute = true
       break
@@ -161,6 +170,8 @@ const handleUploadLocation = async (data) => {
       <UploadLocationModal @handleUploadLocation="handleUploadLocation" />
 
       <ContributeDrawer />
+
+      <UserInfoModal />
     </n-layout-content>
   </n-layout>
 </template>

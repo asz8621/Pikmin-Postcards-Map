@@ -13,6 +13,7 @@ export const useModalStore = defineStore('modal', () => {
     contribute: false,
     editLocation: false,
     deleteLocation: false,
+    userInfo: false,
   })
 
   // 用來開啟指定的 modal

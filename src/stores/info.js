@@ -15,10 +15,15 @@ export const useInfoStore = defineStore('info', () => {
     contribute.value = locations
   }
 
+  const setUserData = (data) => {
+    userData.value = data
+  }
+
   return {
     userData,
     features,
     contribute,
     fetchUserData,
+    setUserData,
   }
 })
