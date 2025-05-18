@@ -26,7 +26,6 @@ const { userData } = storeToRefs(infoStore)
 
 const mapStore = useMapStore()
 const { fetchMapData } = mapStore
-const { mapAllData } = storeToRefs(mapStore)
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
@@ -135,10 +134,15 @@ const handleUploadLocation = async (data) => {
 </script>
 
 <template>
-  <n-layout>
-    <n-layout-header bordered class="header">
-      <div class="headerContent">
-        <div class="logo">logo</div>
+  <n-layout class="relative">
+    <n-layout-header
+      class="absolute top-0 left-0 z-10 h-[72px] px-2 sm:px-4 py-2 bg-white/50"
+      bordered
+    >
+      <div class="flex items-center h-full">
+        <div class="w-[120px] sm:w-[175px] mr-auto transition-width duration-500">
+          <img src="@/assets/images/logo.png" alt="logo" />
+        </div>
 
         <n-dropdown
           v-if="userData"
@@ -147,8 +151,16 @@ const handleUploadLocation = async (data) => {
           :options="options"
           @select="handleSelect"
         >
-          <n-button icon-placement="right" class="headerMenu">
-            {{ userData?.username }}
+          <n-button
+            icon-placement="right"
+            class="max-w-[120px] ml-auto"
+            strong
+            secondary
+            type="primary"
+          >
+            <n-ellipsis class="max-w-[80px]">
+              {{ userData?.username }}
+            </n-ellipsis>
             <template #icon>
               <SvgIcon name="down"></SvgIcon>
             </template>
@@ -157,8 +169,8 @@ const handleUploadLocation = async (data) => {
       </div>
     </n-layout-header>
     <n-layout-content>
-      <div class="map-wrapper">
-        <LeafletMap v-if="mapAllData.length" />
+      <div class="w-full h-screen relative z-[1]">
+        <LeafletMap />
       </div>
 
       <LightboxStrip />
@@ -176,27 +188,4 @@ const handleUploadLocation = async (data) => {
   </n-layout>
 </template>
 
-<style lang="scss">
-$headerHeight: 72px;
-.header {
-  height: $headerHeight;
-  padding: 0.5rem 1rem;
-  .headerContent {
-    display: flex;
-    align-items: center;
-    height: 100%;
-    .headerMenu {
-      margin-left: auto;
-    }
-  }
-}
-.logo {
-  margin-right: auto;
-}
-.map-wrapper {
-  width: 100%;
-  height: calc(100vh - $headerHeight);
-  position: relative;
-  z-index: 1;
-}
-</style>
+<style lang="scss" scoped></style>
