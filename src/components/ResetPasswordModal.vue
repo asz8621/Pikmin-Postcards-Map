@@ -4,14 +4,15 @@ import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/info'
 import { useModalStore } from '@/stores/modal'
 import { useAppMessage } from '@/composables/useAppMessage'
+import { useAuthFlow } from '@/composables/useAuthFlow'
+import axios from '@/plugins/axios'
 
-const emit = defineEmits(['handleResetPassword'])
-
-const { errorMsg } = useAppMessage()
+const { successMsg, errorMsg } = useAppMessage()
+const { signOut } = useAuthFlow()
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
-const { modalStates, modalLoading } = storeToRefs(modalStore)
+const { modalStates, modalLoading, validateErrorMsg } = storeToRefs(modalStore)
 
 const infoStore = useInfoStore()
 const { userData } = storeToRefs(infoStore)
@@ -28,14 +29,32 @@ const passwordRules = {
 }
 
 const handleResetPassword = async () => {
+  if (modalLoading.value) return
+
   try {
-    if (modalLoading.value) return
     await passwordFormRef.value?.validate()
-    modalLoading.value = true
-    const id = userData.value.id
-    emit('handleResetPassword', id, passwordForm.value)
   } catch {
-    errorMsg('驗證失敗')
+    errorMsg(validateErrorMsg.value)
+    return
+  }
+
+  modalLoading.value = true
+  const id = userData.value.id
+
+  try {
+    const res = await axios.put(`/user/reset-password/${id}`, passwordForm.value)
+    successMsg(res.data.message || '修改成功')
+    closeModal('resetPassword')
+    signOut()
+  } catch (err) {
+    const errorMessage = err.response?.data?.message
+    if (Array.isArray(errorMessage)) {
+      errorMessage.forEach((msg) => errorMsg(msg))
+    } else {
+      errorMsg(errorMessage || '操作失敗')
+    }
+  } finally {
+    modalLoading.value = false
   }
 }
 
@@ -43,7 +62,7 @@ const handleResetPassword = async () => {
 watch(
   () => modalStates.value.resetPassword,
   (newVal, oldVal) => {
-    if (oldVal === true && newVal === false) {
+    if (oldVal && !newVal) {
       passwordForm.value.passwordOld = null
       passwordForm.value.password = null
     }
@@ -54,10 +73,9 @@ watch(
 <template>
   <n-modal
     v-model:show="modalStates.resetPassword"
-    preset="card"
     :mask-closable="false"
     :closable="false"
-    class="modal"
+    preset="card"
     title="修改密碼"
   >
     <n-form
@@ -66,6 +84,7 @@ watch(
       :rules="passwordRules"
       :show-require-mark="false"
       :disabled="modalLoading"
+      @keydown.enter.prevent="handleResetPassword"
     >
       <n-form-item label="舊密碼" path="passwordOld">
         <n-input
@@ -87,14 +106,19 @@ watch(
 
     <template #footer>
       <n-space justify="end">
-        <n-button type="primary" @click="handleResetPassword" :disabled="modalLoading">
+        <n-button
+          type="primary"
+          :disabled="modalLoading"
+          :loading="modalLoading"
+          @click="handleResetPassword"
+        >
           送出
         </n-button>
         <n-button
           type="tertiary"
           secondary
-          @click="closeModal('resetPassword')"
           :disabled="modalLoading"
+          @click="closeModal('resetPassword')"
         >
           關閉
         </n-button>
@@ -103,12 +127,4 @@ watch(
   </n-modal>
 </template>
 
-<style lang="scss">
-.modal {
-  width: 500px;
-  @media screen and (max-width: 576px) {
-    width: 100%;
-    margin: 1rem;
-  }
-}
-</style>
+<style lang="scss"></style>
