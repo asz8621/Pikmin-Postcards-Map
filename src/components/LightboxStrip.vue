@@ -13,6 +13,10 @@ const { openModal } = modalStore
 const modeText = computed(() => {
   return isFiltered.value ? '篩選模式' : '一般模式'
 })
+
+const notFoundText = computed(() => {
+  return isFiltered.value ? '篩選不到任何的景點，請放寬標準' : '附近沒有好看的景點'
+})
 </script>
 
 <template>
@@ -36,7 +40,7 @@ const modeText = computed(() => {
       />
     </template>
 
-    <div v-else class="text-center w-full text-white cursor-default">附近沒有好看的景點</div>
+    <div v-else class="text-center w-full text-white cursor-default">{{ notFoundText }}</div>
   </div>
 </template>
 
