@@ -16,59 +16,28 @@ const modeText = computed(() => {
 </script>
 
 <template>
-  <div class="modeText">{{ modeText }}</div>
-  <n-space
-    class="lightbox"
-    justify="start"
-    align="center"
-    size="small"
-    :item-class="mapData.length > 0 ? 'lightboxItem' : 'lightboxItemEmpty'"
+  <div class="absolute bottom-[100px] left-0 bg-black/50 px-2 py-1.5 rounded-t-lg text-white z-[2]">
+    {{ modeText }}
+  </div>
+
+  <div
+    class="absolute bottom-0 left-0 w-full h-[100px] bg-black/50 p-2 z-[3] rounded-tr-lg overflow-x-auto flex flex-nowrap items-center space-x-2 touch-pan-x"
+    style="-webkit-overflow-scrolling: touch"
   >
-    <n-image
-      v-for="item in mapData"
-      :key="item.id"
-      :src="item.image"
-      width="64"
-      preview-disabled
-      @click="openModal('postcard', item)"
-    />
-    <div v-if="mapData.length < 1" class="emptyText">附近沒有好看的景點</div>
-  </n-space>
+    <template v-if="mapData.length > 0">
+      <n-image
+        v-for="item in mapData"
+        :key="item.id"
+        :src="item.image"
+        width="64"
+        preview-disabled
+        class="inline-block min-w-[64px] cursor-pointer hover:opacity-80 transition"
+        @click="openModal('postcard', item)"
+      />
+    </template>
+
+    <div v-else class="text-center w-full text-white cursor-default">附近沒有好看的景點</div>
+  </div>
 </template>
 
-<style lang="scss">
-.lightbox {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  padding: 0.5rem;
-  display: flex;
-  width: 100%;
-  height: 100px;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 0 0.5rem 0 0;
-  z-index: 3;
-  .lightboxItem {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-  }
-  .lightboxItemEmpty {
-    text-align: center;
-    width: 100%;
-    color: #fff;
-    cursor: default;
-  }
-}
-.modeText {
-  position: absolute;
-  bottom: 100px;
-  left: 0rem;
-  background: rgba(0, 0, 0, 0.5);
-  padding: 0.25rem 0.75rem 0.25rem 0.5rem;
-  border-radius: 0.5rem 0.5rem 0 0;
-  color: #fff;
-  z-index: 2;
-}
-</style>
+<style lang="scss"></style>
