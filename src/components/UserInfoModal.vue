@@ -10,7 +10,7 @@ const { successMsg, errorMsg } = useAppMessage()
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
-const { modalStates, modalLoading } = storeToRefs(modalStore)
+const { modalStates, modalLoading, validateErrorMsg } = storeToRefs(modalStore)
 
 const infoStore = useInfoStore()
 const { setUserData } = infoStore
@@ -25,7 +25,7 @@ const userInfoRules = {
   username: [{ required: true, message: '請輸入暱稱', trigger: 'blur' }],
 }
 
-const updateUserInfo = async () => {
+const handleUpdateUserInfo = async () => {
   if (modalLoading.value) return
 
   const id = userInfoForm.value.id
@@ -35,7 +35,13 @@ const updateUserInfo = async () => {
     return
   }
 
-  await userInfoFormRef.value?.validate()
+  try {
+    await userInfoFormRef.value?.validate()
+  } catch {
+    errorMsg(validateErrorMsg.value)
+    return
+  }
+
   modalLoading.value = true
 
   try {
@@ -67,16 +73,15 @@ watch(
     :mask-closable="false"
     :closable="false"
     preset="card"
-    class="modal"
     title="修改個人資料"
   >
     <n-form
       ref="userInfoFormRef"
       :model="userInfoForm"
       :rules="userInfoRules"
-      :show-require-mark="false"
+      show-require-mark
       :disabled="modalLoading"
-      @keydown.enter.prevent="updateUserInfo"
+      @keydown.enter.prevent="handleUpdateUserInfo"
     >
       <n-form-item label="暱稱" path="username">
         <n-input v-model:value="userInfoForm.username" placeholder="請輸入暱稱" />
@@ -89,7 +94,7 @@ watch(
           type="primary"
           :disabled="modalLoading"
           :loading="modalLoading"
-          @click="updateUserInfo"
+          @click="handleUpdateUserInfo"
         >
           送出
         </n-button>
@@ -106,12 +111,4 @@ watch(
   </n-modal>
 </template>
 
-<style lang="scss">
-.modal {
-  width: 500px;
-  @media screen and (max-width: 576px) {
-    width: 100%;
-    margin: 1rem;
-  }
-}
-</style>
+<style lang="scss"></style>
