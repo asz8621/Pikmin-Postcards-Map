@@ -2,17 +2,20 @@
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppMessage } from '@/composables/useAppMessage'
+import { useInfoStore } from '@/stores/info'
 import { useModalStore } from '@/stores/modal'
+import axios from '@/plugins/axios'
 
-const emit = defineEmits(['handleUploadLocation'])
+const { successMsg, errorMsg } = useAppMessage()
 
-const { errorMsg } = useAppMessage()
+const infoStore = useInfoStore()
+const { fetchUserData } = infoStore
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
-const { modalStates, modalLoading } = storeToRefs(modalStore)
+const { modalStates, modalLoading, validateErrorMsg } = storeToRefs(modalStore)
 
-const uploadLocationRef = ref(null)
+const uploadLocationFormRef = ref(null)
 const locationFormData = ref({
   image: null,
   type: null,
@@ -22,6 +25,10 @@ const locationFormData = ref({
 const maxSizeMB = 5
 const maxSizeBytes = maxSizeMB * 1024 * 1024
 const allowedTypes = ['image/png', 'image/jpeg']
+const typeOptions = [
+  { label: '花', value: 'flower' },
+  { label: '蘑菇', value: 'mushroom' },
+]
 
 const rules = {
   image: [
@@ -38,12 +45,11 @@ const rules = {
   type: [{ required: true, message: '請選擇類型', trigger: 'blur' }],
   coords: [
     {
-      required: true,
-      message: '請輸入座標',
-      trigger: 'blur',
-    },
-    {
       validator: (_, value) => {
+        if (!value || value.trim() === '') {
+          return new Error('請輸入座標')
+        }
+
         const coordRegex = /^\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*$/
         const match = value?.match(coordRegex)
 
@@ -76,22 +82,23 @@ const resetLocationFormData = () => {
   }
 }
 
+// 蘑菇禁止修改隱藏版
+const changeType = (type) => {
+  if (type === 'mushroom') locationFormData.value.explore = false
+}
+
 // 檢查檔案格式
-function validateImageFile(file) {
+const validateImageFile = (file) => {
+  if (!file) return new Error('請上傳圖片')
+
   const fileSize = file.file.size
   const fileType = file.type
   const fileName = file.name
-  if (!file || !fileName || !fileSize || !fileType) {
-    return new Error('檔案資訊錯誤')
-  }
+  if (!fileName || !fileSize || !fileType) return new Error('檔案資訊錯誤')
 
-  if (!allowedTypes.includes(fileType)) {
-    return new Error('只能上傳 PNG 或 JPG 圖片')
-  }
+  if (!allowedTypes.includes(fileType)) return new Error('只能上傳 PNG 或 JPG 圖片')
 
-  if (fileSize > maxSizeBytes) {
-    return new Error(`圖片大小不可超過 ${maxSizeMB}MB`)
-  }
+  if (fileSize > maxSizeBytes) return new Error(`圖片大小不可超過 ${maxSizeMB}MB`)
 
   return true
 }
@@ -112,14 +119,14 @@ const beforeUpload = (fileData) => {
 // 暫存圖片到表單資料
 const customUpload = ({ file, onFinish }) => {
   locationFormData.value.image = file
-  uploadLocationRef.value?.validate(null, (rule) => rule?.key === 'image').catch(() => {})
+  uploadLocationFormRef.value?.validate(null, (rule) => rule?.key === 'image').catch(() => {})
   onFinish()
 }
 
 // 移除上傳檔案
 const handleRemove = () => {
   locationFormData.value.image = null
-  uploadLocationRef.value?.validate(null, (rule) => rule?.key === 'image').catch(() => {})
+  uploadLocationFormRef.value?.validate(null, (rule) => rule?.key === 'image').catch(() => {})
 }
 
 // 取得經緯度
@@ -135,9 +142,9 @@ const handleUploadLocation = async () => {
   if (modalLoading.value) return
 
   try {
-    await uploadLocationRef.value?.validate()
+    await uploadLocationFormRef.value?.validate()
   } catch {
-    errorMsg('請確認資料是否填寫齊全無誤')
+    errorMsg(validateErrorMsg.value)
     return
   }
 
@@ -156,7 +163,21 @@ const handleUploadLocation = async () => {
 
   modalLoading.value = true
 
-  emit('handleUploadLocation', formData)
+  try {
+    const res = await axios.post('/user/locations', formData)
+    successMsg(res.data.message)
+    closeModal('uploadLocation')
+    await fetchUserData()
+  } catch (error) {
+    const errorMessage = error.response?.data?.message
+    if (Array.isArray(errorMessage)) {
+      errorMessage.forEach((msg) => errorMsg(msg))
+    } else {
+      errorMsg(errorMessage || '操作失敗')
+    }
+  } finally {
+    modalLoading.value = false
+  }
 }
 
 // 關閉清除資料
@@ -173,30 +194,34 @@ watch(
 <template>
   <n-modal
     v-model:show="modalStates.uploadLocation"
-    title="上傳資料"
-    preset="dialog"
     :mask-closable="false"
     :closable="false"
-    class="modal"
+    :show-icon="false"
+    preset="dialog"
+    title="上傳點位"
   >
     <n-form
-      ref="uploadLocationRef"
+      ref="uploadLocationFormRef"
       :model="locationFormData"
       :rules="rules"
-      label-placement="top"
       :disabled="modalLoading"
+      show-require-mark
+      @keydown.enter.prevent="handleUploadLocation"
     >
       <n-form-item path="image">
         <template #label>
           <span>上傳圖片</span>
           <n-popover placement="bottom" trigger="click">
             <template #trigger>
-              <span style="font-size: 12px; cursor: pointer; color: #5555e2; margin-left: 4px"
-                >範例</span
-              >
+              <span class="text-xs cursor-pointer text-indigo-500 ml-1"> 範例 </span>
             </template>
             <div>
-              <img src="@/assets/images/upload_example.png" alt="" height="200" />
+              <p class="mb-2">直接手機截圖即可，如下圖：</p>
+              <img
+                src="@/assets/images/upload_example.png"
+                alt="upload example"
+                class="max-h-[200px] sm:max-h-[400px]"
+              />
             </div>
           </n-popover>
         </template>
@@ -215,11 +240,9 @@ watch(
       <n-form-item label="類型" path="type">
         <n-select
           v-model:value="locationFormData.type"
-          :options="[
-            { label: '花', value: 'flower' },
-            { label: '蘑菇', value: 'mushroom' },
-          ]"
+          :options="typeOptions"
           placeholder="請選擇類型"
+          @change="changeType"
         />
       </n-form-item>
 
@@ -228,17 +251,29 @@ watch(
       </n-form-item>
 
       <n-form-item label="隱藏版" path="explore">
-        <n-switch v-model:value="locationFormData.explore" />
+        <n-switch
+          v-model:value="locationFormData.explore"
+          :disabled="locationFormData.type === 'mushroom'"
+        >
+          <template #checked> 是 </template>
+          <template #unchecked> 否 </template>
+        </n-switch>
       </n-form-item>
+
       <n-space justify="end">
-        <n-button type="primary" @click="handleUploadLocation" :disabled="modalLoading">
+        <n-button
+          type="primary"
+          :disabled="modalLoading"
+          :loading="modalLoading"
+          @click="handleUploadLocation"
+        >
           送出
         </n-button>
         <n-button
           type="tertiary"
           secondary
-          @click="closeModal('uploadLocation')"
           :disabled="modalLoading"
+          @click="closeModal('uploadLocation')"
         >
           關閉
         </n-button>
@@ -247,12 +282,4 @@ watch(
   </n-modal>
 </template>
 
-<style lang="scss">
-.modal {
-  width: 500px;
-  @media screen and (max-width: 576px) {
-    width: 100%;
-    margin: 1rem;
-  }
-}
-</style>
+<style lang="scss"></style>
