@@ -80,9 +80,18 @@ const handleSelect = async (key) => {
 }
 
 onMounted(async () => {
-  await fetchUserData()
-  await fetchMapData()
-  isDataReady.value = true
+  const [userResult, mapResult] = await Promise.allSettled([fetchUserData(), fetchMapData()])
+
+  if (userResult.status === 'fulfilled' && mapResult.status === 'fulfilled') {
+    isDataReady.value = true
+  } else {
+    if (userResult.status === 'rejected') {
+      errorMsg(userResult.reason?.response?.data?.message || '使用者資料取得失敗')
+    }
+    if (mapResult.status === 'rejected') {
+      errorMsg(mapResult.reason?.response?.data?.message || '地圖資料取得失敗')
+    }
+  }
 })
 
 // 登出

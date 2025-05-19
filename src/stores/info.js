@@ -8,11 +8,15 @@ export const useInfoStore = defineStore('info', () => {
   const contribute = ref([])
 
   const fetchUserData = async () => {
-    const res = await axios.get('/user/info')
-    const { user, types, locations } = res.data.data
-    userData.value = user
-    features.value = types
-    contribute.value = locations
+    try {
+      const res = await axios.get('/user/info')
+      const { user, types, locations } = res.data.data
+      userData.value = user
+      features.value = types
+      contribute.value = locations
+    } catch (error) {
+      return Promise.reject(error)
+    }
   }
 
   const setUserData = (data) => {

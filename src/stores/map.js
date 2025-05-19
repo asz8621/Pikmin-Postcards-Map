@@ -11,9 +11,12 @@ export const useMapStore = defineStore('map', () => {
   const isFiltered = computed(() => !!typeFilter.value || featuresFilter.value.length > 0)
 
   const fetchMapData = async () => {
-    const res = await axios.get('/user/locations')
-    mapAllData.value = res.data.data
-    mapData.value = res.data.data
+    try {
+      const res = await axios.get('/user/locations')
+      mapAllData.value = res.data.data
+    } catch (error) {
+      return Promise.reject(error)
+    }
   }
 
   const setVisibleItems = (items) => {
