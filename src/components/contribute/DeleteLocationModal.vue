@@ -22,9 +22,10 @@ const handleDeleteLocation = async () => {
     return
   }
 
+  modalLoading.value = true
+
   try {
-    const dd = { id: 99, text: 'test' }
-    const res = await axios.delete(`/user/locations/${modalData.value.id}`, dd)
+    const res = await axios.delete(`/user/locations/${modalData.value.id}`)
     await fetchUserData()
     successMsg(res?.message || '刪除成功')
     closeModal('deleteLocation')
@@ -39,11 +40,10 @@ const handleDeleteLocation = async () => {
 <template>
   <n-modal
     v-model:show="modalStates.deleteLocation"
-    title="刪除點位"
-    preset="card"
     :mask-closable="false"
     :closable="false"
-    class="modal"
+    preset="card"
+    title="刪除點位"
   >
     <p>
       <span>你確定要刪除此點位資料嗎？</span>
@@ -53,7 +53,12 @@ const handleDeleteLocation = async () => {
 
     <template #footer>
       <n-space justify="end">
-        <n-button type="error" :loading="modalLoading" @click="handleDeleteLocation">
+        <n-button
+          type="error"
+          :disabled="modalLoading"
+          :loading="modalLoading"
+          @click="handleDeleteLocation"
+        >
           確定刪除
         </n-button>
         <n-button @click="closeModal('deleteLocation')" :disabled="modalLoading"> 取消 </n-button>
@@ -62,12 +67,4 @@ const handleDeleteLocation = async () => {
   </n-modal>
 </template>
 
-<style lang="scss">
-.modal {
-  width: 500px;
-  @media screen and (max-width: 576px) {
-    width: 100%;
-    margin: 1rem;
-  }
-}
-</style>
+<style lang="scss"></style>

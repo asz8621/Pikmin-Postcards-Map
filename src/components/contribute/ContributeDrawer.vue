@@ -43,28 +43,19 @@ const getModelIcon = (type) => {
       return questionMark
   }
 }
-const getStatusText = (status) => {
-  switch (status) {
-    case 'approved':
-      return '已通過'
-    case 'pending':
-      return '審核中'
-    case 'rejected':
-      return '駁回'
-    default:
-      return '狀態異常'
-  }
+
+const statusMap = {
+  approved: { text: '已通過', type: 'success' },
+  pending: { text: '審核中', type: 'warning' },
+  rejected: { text: '駁回', type: 'error' },
 }
-const getStatusType = (status) => {
-  switch (status) {
-    case 'approved':
-      return 'success'
-    case 'pending':
-      return 'warning'
-    case 'rejected':
-      return 'error'
-    default:
-      return 'default'
+const getStatusText = (status) => statusMap[status]?.text || '狀態異常'
+const getStatusType = (status) => statusMap[status]?.type || 'default'
+
+const onDrawerShowChange = (show) => {
+  if (!show) {
+    closeModal('contribute')
+    checkStrategy.value = 'all'
   }
 }
 </script>
@@ -76,68 +67,80 @@ const getStatusType = (status) => {
     placement="right"
     size="small"
     :auto-focus="false"
-    :close-on-esc="false"
     :mask-closable="false"
+    @update:show="onDrawerShowChange"
   >
-    <n-drawer-content title="我的貢獻" closable body-content-class="drawerContent">
-      <n-radio-group v-model:value="checkStrategy" style="display: flex; width: 100%">
-        <n-radio-button value="all" style="flex: 1; text-align: center">全部</n-radio-button>
-        <n-radio-button value="approved" style="flex: 1; text-align: center">已通過</n-radio-button>
-        <n-radio-button value="pending" style="flex: 1; text-align: center">審核中</n-radio-button>
-        <n-radio-button value="rejected" style="flex: 1; text-align: center">駁回</n-radio-button>
+    <n-drawer-content title="我的貢獻" closable body-content-class="!p-2 sm:!p-4">
+      <n-radio-group v-model:value="checkStrategy" class="flex w-full">
+        <n-radio-button value="all" class="flex-1 text-center">全部</n-radio-button>
+        <n-radio-button value="approved" class="flex-1 text-center">已通過</n-radio-button>
+        <n-radio-button value="pending" class="flex-1 text-center">審核中</n-radio-button>
+        <n-radio-button value="rejected" class="flex-1 text-center">駁回</n-radio-button>
       </n-radio-group>
 
-      <n-space vertical v-if="filteredContribute.length > 0" style="margin: 1rem 0">
+      <n-space v-if="filteredContribute.length > 0" vertical class="my-4">
         <n-alert v-if="checkStrategyAlert" type="warning" :show-icon="false">
           <div v-html="checkStrategyAlert"></div>
         </n-alert>
 
-        <n-card v-for="item in filteredContribute" :key="item.id" content-class="cardContent">
-          <div class="cardContentInfo">
-            <div style="display: flex; align-items: center">
-              <!-- 左邊圖片 -->
+        <n-card
+          v-for="item in filteredContribute"
+          :key="item.id"
+          class="overflow-hidden"
+          content-class="flex flex-wrap flex-col sm:flex-row sm:flex-nowrap !p-0"
+        >
+          <div class="w-full p-2 sm:p-4">
+            <div class="flex items-center">
               <img
                 :src="item.image"
-                alt="image"
-                style="
-                  width: 80px;
-                  height: 80px;
-                  object-fit: cover;
-                  margin-right: 16px;
-                  border-radius: 8px;
-                "
+                :alt="item.name"
+                class="w-[80px] h-[80px] object-cover mr-4 rounded-lg"
               />
 
-              <!-- 右邊資訊 -->
               <div>
-                <div style="display: inline-flex; align-items: center">
+                <div class="inline-flex items-center">
                   <img
                     :src="getModelIcon(item.type)"
-                    alt="image"
-                    width="24"
-                    height="24"
-                    style="object-fit: cover; margin-right: 8px"
+                    :alt="`${item.type}-icon`"
+                    class="w-6 h-6 object-cover mr-2"
                   />
-                  <strong style="margin-right: 8px">{{ item.name }}</strong>
-                  <n-tag :bordered="false" :type="getStatusType(item.image_status)" size="small">{{
-                    getStatusText(item.image_status)
-                  }}</n-tag>
+
+                  <strong class="mr-2">{{ item.name }}</strong>
+
+                  <n-tag :type="getStatusType(item.image_status)" :bordered="false" size="small">
+                    {{ getStatusText(item.image_status) }}
+                  </n-tag>
                 </div>
-                <div>{{ item.country }}, {{ item.city }}</div>
+
+                <div class="text-xs text-gray-400 mb-2">{{ item.country }}, {{ item.city }}</div>
+
                 <div>{{ item.lat }}, {{ item.long }}</div>
+
                 <div v-if="item.rejected_text">
-                  <n-text type="error">原因：{{ item.rejected_text }}</n-text>
+                  <div class="bg-red-100 border border-red-300 text-sm mt-2 p-2 rounded">
+                    駁回原因：{{ item.rejected_text }}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="cardContentOperate">
-            <n-button strong secondary type="warning" @click="openModal('editLocation', item)">
+          <div v-if="item.image_status === 'pending'" class="flex flex-row sm:flex-col">
+            <n-button
+              secondary
+              type="warning"
+              class="flex-1 w-full rounded-none"
+              @click="openModal('editLocation', item)"
+            >
               <template #icon>
                 <SvgIcon name="edit" width="36px" height="36px"></SvgIcon>
               </template>
             </n-button>
-            <n-button strong secondary type="error" @click="openModal('deleteLocation', item)">
+            <n-button
+              secondary
+              type="error"
+              class="flex-1 w-full rounded-none"
+              @click="openModal('deleteLocation', item)"
+            >
               <template #icon>
                 <SvgIcon name="delete" width="36px" height="36px"></SvgIcon>
               </template>
@@ -148,52 +151,15 @@ const getStatusType = (status) => {
 
       <n-empty
         v-else
+        class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
         description="查無資料"
-        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%)"
       />
-      <template #footer>
-        <n-button @click="closeModal('contribute')">關閉</n-button>
-      </template>
     </n-drawer-content>
 
-    <EditLocationModal />
+    <EditLocationModal class="w-full xs:w-[520px] m-4 xs:m-auto" />
 
-    <DeleteLocationModal />
+    <DeleteLocationModal class="w-full xs:w-[420px] m-4 xs:m-auto" />
   </n-drawer>
 </template>
 
-<style lang="scss">
-.drawerContent {
-  padding: 1rem !important;
-  @media screen and (max-width: 768px) {
-    padding: 0.5rem !important;
-  }
-}
-.cardContent {
-  padding: 0 !important;
-  display: flex;
-  flex-wrap: nowrap;
-  @media screen and (max-width: 768px) {
-    flex-direction: column;
-    flex-wrap: wrap;
-  }
-}
-.cardContentInfo {
-  padding: 0.75rem 1rem !important;
-  width: 100%;
-  @media screen and (max-width: 768px) {
-    padding: 0.5rem !important;
-  }
-}
-.cardContentOperate {
-  display: flex;
-  flex-direction: column;
-  @media screen and (max-width: 768px) {
-    flex-direction: row;
-  }
-  button {
-    width: 100%;
-    flex: 1;
-  }
-}
-</style>
+<style lang="scss"></style>

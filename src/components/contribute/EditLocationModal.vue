@@ -10,7 +10,7 @@ const { successMsg, errorMsg } = useAppMessage()
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
-const { modalStates, modalData, modalLoading } = storeToRefs(modalStore)
+const { modalStates, modalData, modalLoading, validateErrorMsg } = storeToRefs(modalStore)
 
 const infoStore = useInfoStore()
 const { fetchUserData } = infoStore
@@ -21,6 +21,10 @@ const maxSizeMB = 5
 const maxSizeBytes = maxSizeMB * 1024 * 1024
 const allowedTypes = ['image/png', 'image/jpeg']
 const imageUrl = ref('')
+const typeOptions = [
+  { label: '花', value: 'flower' },
+  { label: '蘑菇', value: 'mushroom' },
+]
 
 const rules = {
   image: [
@@ -28,7 +32,6 @@ const rules = {
       key: 'image',
       required: true,
       validator: (_, value) => {
-        console.log('value', value)
         if (typeof value === 'string') return true
 
         const result = validateImageFile(value)
@@ -40,12 +43,11 @@ const rules = {
   type: [{ required: true, message: '請選擇類型', trigger: 'blur' }],
   coords: [
     {
-      required: true,
-      message: '請輸入座標',
-      trigger: 'blur',
-    },
-    {
       validator: (_, value) => {
+        if (!value || value.trim() === '') {
+          return new Error('請輸入座標')
+        }
+
         const coordRegex = /^\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*$/
         const match = value?.match(coordRegex)
 
@@ -70,6 +72,11 @@ const rules = {
 const submitText = computed(() => {
   return locationFormData.value.image_status === 'rejected' ? '重新送審' : '送出'
 })
+
+// 蘑菇禁止修改隱藏版
+const changeType = (type) => {
+  if (type === 'mushroom') locationFormData.value.explore = false
+}
 
 // 檢查檔案格式
 function validateImageFile(file) {
@@ -136,7 +143,7 @@ const handleEditLocation = async () => {
   try {
     await editLocationRef.value?.validate()
   } catch {
-    errorMsg('請確認資料是否填寫齊全無誤')
+    errorMsg(validateErrorMsg.value)
     return
   }
 
@@ -152,6 +159,7 @@ const handleEditLocation = async () => {
   for (const [key, value] of Object.entries(apiData)) {
     formData.append(key, value)
   }
+
   modalLoading.value = true
 
   try {
@@ -194,33 +202,32 @@ watch(
 <template>
   <n-modal
     v-model:show="modalStates.editLocation"
-    title="上傳資料"
-    preset="dialog"
     :mask-closable="false"
     :closable="false"
-    class="modal"
+    :show-icon="false"
+    preset="dialog"
+    title="修改點位"
   >
     <n-form
       ref="editLocationRef"
       :model="locationFormData"
       :rules="rules"
-      label-placement="top"
       :disabled="modalLoading"
+      show-require-mark
+      @keydown.enter.prevent="handleEditLocation"
     >
       <n-form-item path="image">
         <template #label>
           <span>上傳圖片</span>
           <n-popover placement="bottom" trigger="click">
             <template #trigger>
-              <span style="font-size: 12px; cursor: pointer; color: #5555e2; margin-left: 4px"
-                >範例</span
-              >
+              <span class="text-xs cursor-pointer text-indigo-500 ml-1"> 範例 </span>
             </template>
             <div>
               <img src="@/assets/images/upload_example.png" alt="" height="200" />
             </div>
           </n-popover>
-          <img :src="imageUrl" alt="" style="max-height: 300px; margin-top: 0.5rem" />
+          <img :src="imageUrl" alt="" class="max-h-[300px] mt-2" />
         </template>
         <n-upload
           accept=".png,.jpg"
@@ -237,11 +244,9 @@ watch(
       <n-form-item label="類型" path="type">
         <n-select
           v-model:value="locationFormData.type"
-          :options="[
-            { label: '花', value: 'flower' },
-            { label: '蘑菇', value: 'mushroom' },
-          ]"
+          :options="typeOptions"
           placeholder="請選擇類型"
+          @change="changeType"
         />
       </n-form-item>
 
@@ -250,17 +255,29 @@ watch(
       </n-form-item>
 
       <n-form-item label="隱藏版" path="explore">
-        <n-switch v-model:value="locationFormData.explore" />
+        <n-switch
+          v-model:value="locationFormData.explore"
+          :disabled="locationFormData.type === 'mushroom'"
+        >
+          <template #checked> 是 </template>
+          <template #unchecked> 否 </template>
+        </n-switch>
       </n-form-item>
+
       <n-space justify="end">
-        <n-button type="primary" @click="handleEditLocation" :disabled="modalLoading">
+        <n-button
+          type="primary"
+          :disabled="modalLoading"
+          :loading="modalLoading"
+          @click="handleEditLocation"
+        >
           {{ submitText }}
         </n-button>
         <n-button
           type="tertiary"
           secondary
-          @click="closeModal('editLocation')"
           :disabled="modalLoading"
+          @click="closeModal('editLocation')"
         >
           關閉
         </n-button>
@@ -269,12 +286,4 @@ watch(
   </n-modal>
 </template>
 
-<style lang="scss">
-.modal {
-  width: 500px;
-  @media screen and (max-width: 576px) {
-    width: 100%;
-    margin: 1rem;
-  }
-}
-</style>
+<style lang="scss"></style>
