@@ -50,23 +50,22 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
 </script>
 
 <template>
-  <n-modal v-model:show="modalStates.postcard" preset="card" :mask-closable="false" class="modal">
+  <n-modal
+    v-model:show="modalStates.postcard"
+    :mask-closable="false"
+    :closable="false"
+    :autoFocus="false"
+    preset="card"
+  >
     <template #header>
-      <div class="place" style="display: flex; align-items: center">
-        <img
-          :src="getTypeIcon(modalData?.type)"
-          alt=""
-          width="24"
-          height="24"
-          class="placeIcon"
-          style="margin-right: 0.5rem"
-        />
-        <h3 class="placeName">明信片資訊</h3>
+      <div class="flex items-center">
+        <img :src="getTypeIcon(modalData?.type)" alt="" width="24" height="24" class="mr-2" />
+        <h3 class="text-base font-bold">明信片資訊</h3>
       </div>
     </template>
 
-    <div class="modal-content">
-      <div class="modal-left">
+    <div class="flex flex-col md:flex-row gap-4">
+      <div class="flex-1">
         <n-image :src="modalData?.image" width="100%" :render-toolbar="customToolbar" />
 
         <n-space size="small" wrap>
@@ -76,13 +75,13 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
         </n-space>
       </div>
 
-      <div class="modal-right">
-        <div class="placeLocation">
-          <h3>{{ modalData?.name }}</h3>
-          <span class="smallText">{{ modalData?.country }}, {{ modalData?.city }}</span>
+      <div class="flex-1">
+        <div>
+          <h3 class="font-bold text-base">{{ modalData?.name }}</h3>
+          <span class="text-xs text-gray-400">{{ modalData?.country }}, {{ modalData?.city }}</span>
         </div>
-        <n-space align="center" style="margin: 0.5rem 0">
-          <span class="coordinates">{{ modalData?.lat }}, {{ modalData?.long }}</span>
+        <n-space align="center" class="my-2">
+          <span>{{ modalData?.lat }}, {{ modalData?.long }}</span>
           <n-button
             quaternary
             circle
@@ -91,7 +90,9 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
             v-clipboard:success="onCopy"
             v-clipboard:error="onError"
           >
-            <template #icon><SvgIcon name="copy" /></template>
+            <template #icon>
+              <SvgIcon name="copy" />
+            </template>
           </n-button>
         </n-space>
       </div>
@@ -103,35 +104,4 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
   </n-modal>
 </template>
 
-<style lang="scss">
-.modal {
-  width: 500px;
-  @media screen and (max-width: 576px) {
-    width: 100%;
-    margin: 1rem;
-  }
-}
-
-.modal-content {
-  display: flex;
-  gap: 1rem;
-  flex-direction: row;
-  @media (max-width: 767px) {
-    flex-direction: column;
-  }
-  .modal-left {
-    flex: 1;
-    min-width: 200px;
-  }
-  .modal-right {
-    flex: 1;
-    .placeLocation {
-      line-height: 1.25;
-    }
-    .smallText {
-      font-size: 12px;
-      color: #888;
-    }
-  }
-}
-</style>
+<style lang="scss"></style>
