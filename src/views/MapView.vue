@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/info'
 import { useMapStore } from '@/stores/map'
@@ -28,8 +28,9 @@ const mapStore = useMapStore()
 const { fetchMapData } = mapStore
 
 const modalStore = useModalStore()
-const { closeModal } = modalStore
-const { modalStates, modalLoading } = storeToRefs(modalStore)
+const { modalStates } = storeToRefs(modalStore)
+
+const isDataReady = ref(false)
 
 const options = [
   {
@@ -81,26 +82,8 @@ const handleSelect = async (key) => {
 onMounted(async () => {
   await fetchUserData()
   await fetchMapData()
+  isDataReady.value = true
 })
-
-// 修改密碼
-const handleResetPassword = async (id, data) => {
-  try {
-    const res = await axios.put(`/user/reset-password/${id}`, data)
-    successMsg(res.data.message)
-    closeModal('resetPassword')
-    signOut()
-  } catch (err) {
-    const errorMessage = err.response?.data?.message
-    if (Array.isArray(errorMessage)) {
-      errorMessage.forEach((msg) => errorMsg(msg))
-    } else {
-      errorMsg(errorMessage || '操作失敗')
-    }
-  } finally {
-    modalLoading.value = false
-  }
-}
 
 // 登出
 const handleLogout = async () => {
@@ -110,25 +93,6 @@ const handleLogout = async () => {
     signOut()
   } catch (err) {
     errorMsg(err.response?.data?.message || '操作失敗')
-  }
-}
-
-// 上傳點位
-const handleUploadLocation = async (data) => {
-  try {
-    const res = await axios.post('/user/locations', data)
-    successMsg(res.data.message)
-    closeModal('uploadLocation')
-    await fetchUserData()
-  } catch (error) {
-    const errorMessage = error.response?.data?.message
-    if (Array.isArray(errorMessage)) {
-      errorMessage.forEach((msg) => errorMsg(msg))
-    } else {
-      errorMsg(errorMessage || '操作失敗')
-    }
-  } finally {
-    modalLoading.value = false
   }
 }
 </script>
@@ -170,20 +134,20 @@ const handleUploadLocation = async (data) => {
     </n-layout-header>
     <n-layout-content>
       <div class="w-full h-screen relative z-[1]">
-        <LeafletMap />
+        <LeafletMap v-if="isDataReady" />
       </div>
 
       <LightboxStrip />
 
-      <PostcardModal />
-
-      <ResetPasswordModal @handleResetPassword="handleResetPassword" />
-
-      <UploadLocationModal @handleUploadLocation="handleUploadLocation" />
-
       <ContributeDrawer />
 
-      <UserInfoModal />
+      <PostcardModal class="w-full xs:w-[520px] m-4 xs:m-auto" />
+
+      <ResetPasswordModal class="w-full xs:w-[420px] m-4 xs:m-auto" />
+
+      <UploadLocationModal class="w-full xs:w-[420px] m-4 xs:m-auto" />
+
+      <UserInfoModal class="w-full xs:w-[420px] m-4 xs:m-auto" />
     </n-layout-content>
   </n-layout>
 </template>
