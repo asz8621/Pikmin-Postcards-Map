@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Cookies from 'js-cookie'
+import { useLoadingStore } from '@/stores/loading'
 
 const routes = [
   {
@@ -25,10 +26,13 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  const loadingStore = useLoadingStore()
   const token = Cookies.get('token')
+
   if (to.meta.requiresAuth && !token) {
     next('/login')
   } else {
+    if (to.name !== 'login') loadingStore.openAppLoading()
     next()
   }
 })

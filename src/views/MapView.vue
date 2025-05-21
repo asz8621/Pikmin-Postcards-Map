@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/info'
 import { useMapStore } from '@/stores/map'
 import { useModalStore } from '@/stores/modal'
+import { useLoadingStore } from '@/stores/loading'
 import LeafletMap from '@/components/LeafletMap.vue'
 import PostcardModal from '@/components/PostcardModal.vue'
 import LightboxStrip from '@/components/LightboxStrip.vue'
@@ -29,6 +30,9 @@ const { fetchMapData } = mapStore
 
 const modalStore = useModalStore()
 const { modalStates } = storeToRefs(modalStore)
+
+const loadingStore = useLoadingStore()
+const { closeAppLoading } = loadingStore
 
 const isDataReady = ref(false)
 
@@ -84,6 +88,7 @@ onMounted(async () => {
 
   if (userResult.status === 'fulfilled' && mapResult.status === 'fulfilled') {
     isDataReady.value = true
+    closeAppLoading()
   } else {
     if (userResult.status === 'rejected') {
       errorMsg(userResult.reason?.response?.data?.message || '使用者資料取得失敗')
