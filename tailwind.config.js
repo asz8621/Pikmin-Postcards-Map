@@ -13,6 +13,7 @@ export default {
     extend: {
       backgroundImage: {
         login: "url('@/assets/images/login_bg.png')",
+        notFound: "url('@/assets/images/404.png')",
       },
     },
   },

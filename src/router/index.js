@@ -18,6 +18,11 @@ const routes = [
     component: () => import('@/views/MapView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/views/NotFoundView.vue'),
+  },
 ]
 
 const router = createRouter({
@@ -32,7 +37,7 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !token) {
     next('/login')
   } else {
-    if (to.name !== 'login') loadingStore.openAppLoading()
+    if (to.name !== 'login' && to.name !== 'NotFound') loadingStore.openAppLoading()
     next()
   }
 })
