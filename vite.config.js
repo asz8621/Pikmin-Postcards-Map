@@ -6,13 +6,16 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
 import path from 'path'
 
+const svgPath = path.resolve(fileURLToPath(new URL('.', import.meta.url)), 'src/assets/images/svg')
+
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/',
   plugins: [
     vue(),
     vueDevTools(),
     createSvgIconsPlugin({
-      iconDirs: [path.resolve(process.cwd(), 'src/assets/images/svg')],
+      iconDirs: [svgPath],
       symbolId: '[dir]/[name]',
     }),
   ],
