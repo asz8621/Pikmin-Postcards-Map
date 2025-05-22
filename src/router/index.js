@@ -30,16 +30,24 @@ const router = createRouter({
   routes,
 })
 
+const excludedRoutes = ['login', 'NotFound']
+
 router.beforeEach((to, from, next) => {
   const loadingStore = useLoadingStore()
   const token = Cookies.get('token')
 
   if (to.meta.requiresAuth && !token) {
-    next('/login')
-  } else {
-    if (to.name !== 'login' && to.name !== 'NotFound') loadingStore.openAppLoading()
-    next()
+    loadingStore.closeAppLoading()
+    return next('/login')
   }
+
+  if (excludedRoutes.includes(to.name)) {
+    loadingStore.closeAppLoading()
+  } else {
+    loadingStore.openAppLoading()
+  }
+
+  next()
 })
 
 export default router
