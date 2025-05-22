@@ -84,9 +84,9 @@ const initMap = () => {
     zoomControl: false,
   }).setView([25.033, 121.5654], zoomLevel.value)
 
-  L.tileLayer('https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}{r}.png', {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &amp; <a href="https://wikimediafoundation.org/">Wikimedia Foundation</a>',
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd',
   }).addTo(map)
 
   L.control.zoom({ position: 'bottomright' }).addTo(map)
