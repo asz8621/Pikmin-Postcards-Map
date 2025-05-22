@@ -16,7 +16,7 @@ const themeOverrides = {
 </script>
 
 <template>
-  <n-config-provider :theme-overrides="themeOverrides">
+  <n-config-provider :theme-overrides="themeOverrides" preflight-style-disabled>
     <n-message-provider>
       <n-dialog-provider>
         <div id="app">

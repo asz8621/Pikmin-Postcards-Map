@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import defaultTheme from 'tailwindcss/defaultTheme'
+
 export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
@@ -14,6 +16,9 @@ export default {
       backgroundImage: {
         login: "url('@/assets/images/login_bg.png')",
         notFound: "url('@/assets/images/404.png')",
+      },
+      fontFamily: {
+        sans: ['"Noto Sans TC"', ...defaultTheme.fontFamily.sans],
       },
     },
   },
