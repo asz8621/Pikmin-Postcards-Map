@@ -1,8 +1,8 @@
 <script setup>
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useMapStore } from '@/stores/map'
-import { useModalStore } from '@/stores/modal'
+import { useMapStore } from '@/stores/useMapStore'
+import { useModalStore } from '@/stores/useModalStore'
 
 const mapStore = useMapStore()
 const { mapData, isFiltered } = storeToRefs(mapStore)

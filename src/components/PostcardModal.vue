@@ -4,7 +4,7 @@ import { storeToRefs } from 'pinia'
 import mushroomIcon from '@/assets/images/mushroom.png'
 import flowerIcon from '@/assets/images/flower.png'
 import questionMark from '@/assets/images/question-mark.png'
-import { useModalStore } from '@/stores/modal'
+import { useModalStore } from '@/stores/useModalStore'
 import { useAppMessage } from '@/composables/useAppMessage'
 
 const { successMsg, errorMsg } = useAppMessage()

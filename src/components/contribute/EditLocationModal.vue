@@ -2,8 +2,8 @@
 import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppMessage } from '@/composables/useAppMessage'
-import { useInfoStore } from '@/stores/info'
-import { useModalStore } from '@/stores/modal'
+import { useInfoStore } from '@/stores/useInfoStore'
+import { useModalStore } from '@/stores/useModalStore'
 import axios from '@/plugins/axios'
 
 const { successMsg, errorMsg } = useAppMessage()

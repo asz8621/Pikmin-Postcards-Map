@@ -1,6 +1,6 @@
 <script setup>
 import { storeToRefs } from 'pinia'
-import { useLoadingStore } from '@/stores/loading'
+import { useLoadingStore } from '@/stores/useLoadingStore'
 
 const loadingStore = useLoadingStore()
 const { isAppLoading } = storeToRefs(loadingStore)

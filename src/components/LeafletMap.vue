@@ -8,9 +8,9 @@ import mushroomIcon from '@/assets/images/mushroom.png'
 import flowerIcon from '@/assets/images/flower.png'
 import questionMark from '@/assets/images/question-mark.png'
 
-import { useMapStore } from '@/stores/map'
-import { useInfoStore } from '@/stores/info'
-import { useModalStore } from '@/stores/modal'
+import { useMapStore } from '@/stores/useMapStore'
+import { useInfoStore } from '@/stores/useInfoStore'
+import { useModalStore } from '@/stores/useModalStore'
 import { storeToRefs } from 'pinia'
 
 const mapStore = useMapStore()

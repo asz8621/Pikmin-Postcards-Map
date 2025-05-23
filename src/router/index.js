@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Cookies from 'js-cookie'
-import { useLoadingStore } from '@/stores/loading'
+import { useLoadingStore } from '@/stores/useLoadingStore'
 
 const routes = [
   {

@@ -1,8 +1,8 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useInfoStore } from '@/stores/info'
-import { useModalStore } from '@/stores/modal'
+import { useInfoStore } from '@/stores/useInfoStore'
+import { useModalStore } from '@/stores/useModalStore'
 import { useAppMessage } from '@/composables/useAppMessage'
 import axios from '@/plugins/axios'
 
