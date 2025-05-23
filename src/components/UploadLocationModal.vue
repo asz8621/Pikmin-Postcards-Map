@@ -18,6 +18,7 @@ const { modalStates, modalLoading, validateErrorMsg } = storeToRefs(modalStore)
 const uploadLocationFormRef = ref(null)
 const locationFormData = ref({
   image: null,
+  imageFile: null,
   type: null,
   coords: null,
   explore: false,
@@ -31,12 +32,12 @@ const typeOptions = [
 ]
 
 const rules = {
-  image: [
+  imageFile: [
     {
-      key: 'image',
+      key: 'imageFile',
       required: true,
       validator: (_, value) => {
-        const result = validateImageFile(value)
+        const result = validateImageFile(value, 'rrrrrrrr')
         return result
       },
       trigger: ['change', 'blur'],
@@ -91,10 +92,10 @@ const changeType = (type) => {
 const validateImageFile = (file) => {
   if (!file) return new Error('請上傳圖片')
 
-  const fileSize = file.file.size
+  const fileSize = file.size
   const fileType = file.type
   const fileName = file.name
-  if (!fileName || !fileSize || !fileType) return new Error('檔案資訊錯誤')
+  if (!fileName || !fileType) return new Error('檔案資訊錯誤')
 
   if (!allowedTypes.includes(fileType)) return new Error('只能上傳 PNG 或 JPG 圖片')
 
@@ -104,9 +105,16 @@ const validateImageFile = (file) => {
 }
 
 // 檢查上傳檔案
-const beforeUpload = (fileData) => {
-  const file = fileData.file
-  const result = validateImageFile(file)
+const beforeUpload = (uploadData) => {
+  const file = uploadData.file.file
+  const fileData = {
+    file,
+    name: file.name,
+    size: file.size,
+    type: file.type,
+  }
+
+  const result = validateImageFile(fileData, 'beforeUpload')
 
   if (result instanceof Error) {
     errorMsg(result.message)
@@ -118,15 +126,15 @@ const beforeUpload = (fileData) => {
 
 // 暫存圖片到表單資料
 const customUpload = ({ file, onFinish }) => {
-  locationFormData.value.image = file
-  uploadLocationFormRef.value?.validate(null, (rule) => rule?.key === 'image').catch(() => {})
+  locationFormData.value.imageFile = file.file
+  uploadLocationFormRef.value?.validate(null, (rule) => rule?.key === 'imageFile').catch(() => {})
   onFinish()
 }
 
 // 移除上傳檔案
 const handleRemove = () => {
-  locationFormData.value.image = null
-  uploadLocationFormRef.value?.validate(null, (rule) => rule?.key === 'image').catch(() => {})
+  locationFormData.value.imageFile = null
+  uploadLocationFormRef.value?.validate(null, (rule) => rule?.key === 'imageFile').catch(() => {})
 }
 
 // 取得經緯度
@@ -153,7 +161,6 @@ const handleUploadLocation = async () => {
   locationFormData.value.long = long
 
   const apiData = { ...locationFormData.value }
-  apiData.image = locationFormData.value.image.file
   delete apiData.coords
 
   const formData = new FormData()
@@ -208,7 +215,7 @@ watch(
       show-require-mark
       @keydown.enter.prevent="handleUploadLocation"
     >
-      <n-form-item path="image">
+      <n-form-item path="imageFile">
         <template #label>
           <span>上傳圖片</span>
           <n-popover placement="bottom" trigger="click">
@@ -242,7 +249,7 @@ watch(
           v-model:value="locationFormData.type"
           :options="typeOptions"
           placeholder="請選擇類型"
-          @change="changeType"
+          @update:value="changeType"
         />
       </n-form-item>
 
