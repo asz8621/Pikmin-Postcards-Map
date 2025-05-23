@@ -20,20 +20,17 @@ const locationFormData = ref({})
 const maxSizeMB = 5
 const maxSizeBytes = maxSizeMB * 1024 * 1024
 const allowedTypes = ['image/png', 'image/jpeg']
-const imageUrl = ref('')
 const typeOptions = [
   { label: '花', value: 'flower' },
   { label: '蘑菇', value: 'mushroom' },
 ]
 
 const rules = {
-  image: [
+  imageFile: [
     {
-      key: 'image',
+      key: 'imageFile',
       required: true,
       validator: (_, value) => {
-        if (typeof value === 'string') return true
-
         const result = validateImageFile(value)
         return result
       },
@@ -79,15 +76,14 @@ const changeType = (type) => {
 }
 
 // 檢查檔案格式
-function validateImageFile(file) {
-  if (!file) {
-    locationFormData.value.image = imageUrl.value
-    return true
-  }
-  const fileSize = file.file.size
+const validateImageFile = (file) => {
+  // 沒重新上傳不驗證
+  if (!file && locationFormData.value.image) return true
+
+  const fileSize = file.size
   const fileType = file.type
   const fileName = file.name
-  if (!file || !fileName || !fileSize || !fileType) {
+  if (!fileName || !fileSize || !fileType) {
     return new Error('檔案資訊錯誤')
   }
 
@@ -103,9 +99,16 @@ function validateImageFile(file) {
 }
 
 // 檢查上傳檔案
-const beforeUpload = (fileData) => {
-  const file = fileData.file
-  const result = validateImageFile(file)
+const beforeUpload = (uploadData) => {
+  const file = uploadData.file.file
+  const fileData = {
+    file,
+    name: file.name,
+    size: file.size,
+    type: file.type,
+  }
+
+  const result = validateImageFile(fileData)
 
   if (result instanceof Error) {
     errorMsg(result.message)
@@ -117,15 +120,13 @@ const beforeUpload = (fileData) => {
 
 // 暫存圖片到表單資料
 const customUpload = ({ file, onFinish }) => {
-  locationFormData.value.image = file
-  editLocationRef.value?.validate(null, (rule) => rule?.key === 'image').catch(() => {})
+  locationFormData.value.imageFile = file.file
   onFinish()
 }
 
 // 移除上傳檔案
 const handleRemove = () => {
-  locationFormData.value.image = null
-  editLocationRef.value?.validate(null, (rule) => rule?.key === 'image').catch(() => {})
+  locationFormData.value.imageFile = null
 }
 
 // 取得經緯度
@@ -152,8 +153,9 @@ const handleEditLocation = async () => {
   locationFormData.value.long = long
 
   const apiData = { ...locationFormData.value }
-  if (typeof apiData.image !== 'string') apiData.image = locationFormData.value.image.file
   delete apiData.coords
+
+  if (!apiData.imageFile) delete apiData.imageFile
 
   const formData = new FormData()
   for (const [key, value] of Object.entries(apiData)) {
@@ -184,13 +186,13 @@ watch(
         id,
         explore,
         image,
+        imageFile: null,
         type,
         lat,
         long,
         coords: `${lat}, ${long}`,
         image_status,
       }
-      imageUrl.value = image
     }
     if (oldVal && !newVal) {
       locationFormData.value = {}
@@ -216,7 +218,7 @@ watch(
       show-require-mark
       @keydown.enter.prevent="handleEditLocation"
     >
-      <n-form-item path="image">
+      <n-form-item path="imageFile">
         <template #label>
           <span>上傳圖片</span>
           <n-popover placement="bottom" trigger="click">
@@ -224,10 +226,15 @@ watch(
               <span class="text-xs cursor-pointer text-indigo-500 ml-1"> 範例 </span>
             </template>
             <div>
-              <img src="@/assets/images/upload_example.png" alt="" height="200" />
+              <p class="mb-2">直接手機截圖即可，如下圖：</p>
+              <img
+                src="@/assets/images/upload_example.png"
+                alt="upload example"
+                class="max-h-[200px] sm:max-h-[400px]"
+              />
             </div>
           </n-popover>
-          <img :src="imageUrl" alt="" class="max-h-[300px] mt-2" />
+          <img :src="locationFormData.image" alt="" class="max-h-[300px] mt-2" />
         </template>
         <n-upload
           accept=".png,.jpg"
@@ -246,7 +253,7 @@ watch(
           v-model:value="locationFormData.type"
           :options="typeOptions"
           placeholder="請選擇類型"
-          @change="changeType"
+          @update:value="changeType"
         />
       </n-form-item>
 
