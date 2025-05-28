@@ -137,6 +137,58 @@ const handleRemove = () => {
   uploadLocationFormRef.value?.validate(null, (rule) => rule?.key === 'imageFile').catch(() => {})
 }
 
+// 縮放並轉換圖片為 JPG
+const resizeAndConvertToJPG = (file) => {
+  const maxSize = 1500
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      img.src = reader.result
+    }
+
+    img.onload = () => {
+      let { width, height } = img
+
+      // 計算等比例縮放
+      if (width > maxSize || height > maxSize) {
+        const scale = Math.min(maxSize / width, maxSize / height)
+        width = width * scale
+        height = height * scale
+      }
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return reject('無法取得畫布上下文')
+
+      // 背景改白色（防止 PNG 透明變黑）
+      ctx.fillStyle = 'white'
+      ctx.fillRect(0, 0, width, height)
+
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return reject('轉換失敗')
+          const newFile = new File([blob], file.name.replace(/\.\w+$/, '.jpg'), {
+            type: 'image/jpeg',
+          })
+          resolve(newFile)
+        },
+        'image/jpeg',
+        // 0.85, // 壓縮品質，可依需求調整
+      )
+    }
+
+    reader.onerror = (err) => reject(err)
+    reader.readAsDataURL(file)
+  })
+}
+
 // 取得經緯度
 const getCoordinates = (input) => {
   const [latStr, longStr] = input.split(',')
@@ -165,22 +217,29 @@ const handleUploadLocation = async () => {
 
   const formData = new FormData()
   for (const [key, value] of Object.entries(apiData)) {
-    formData.append(key, value)
+    if (key === 'imageFile' && value) {
+      const compressedFile = await resizeAndConvertToJPG(value)
+      formData.append('imageFile', compressedFile)
+    } else {
+      formData.append(key, value)
+    }
   }
 
   modalLoading.value = true
 
   try {
-    const res = await axios.post('/user/locations', formData)
+    const res = await axios.post('/user/locations', formData, {
+      timeout: 30000,
+    })
     successMsg(res.data.message)
     closeModal('uploadLocation')
     await fetchUserData()
   } catch (error) {
-    const errorMessage = error.response?.data?.message
+    const errorMessage = error.response?.data?.message || error.message || '操作失敗'
     if (Array.isArray(errorMessage)) {
       errorMessage.forEach((msg) => errorMsg(msg))
     } else {
-      errorMsg(errorMessage || '操作失敗')
+      errorMsg(errorMessage)
     }
   } finally {
     modalLoading.value = false
