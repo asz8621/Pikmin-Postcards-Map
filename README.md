@@ -1,35 +1,34 @@
-# pikmin-user
+# Pikmin Postcards Map
 
-This template should help get you started developing with Vue 3 in Vite.
+此專案是一個互動式地圖應用，讓使用者能上傳並管理 Pikmin 明信片地點。此專案採用 Vue 3、Vite、Pinia、Naive UI 與 Leaflet 打造，結合地理資訊與使用者互動體驗，支援桌面與行動裝置操作。
 
-## Recommended IDE Setup
+---
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## 🔑 核心功能
 
-## Customize configuration
+- 🔐 **使用者登入 / 登出驗證**
+- 🗺️ **地圖瀏覽與地點篩選**
+  - 可依明信片類型與標籤進行篩選
+- 👤 **個人資料與密碼修改**
+- 📦 **我的貢獻管理**
+  - 上傳 / 編輯 / 刪除明信片地點
+  - 檢視審核狀態與駁回原因
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+---
 
-## Project Setup
+## ⚙️ 技術架構
 
-```sh
-npm install
-```
+| 分類        | 技術                                                                                                         |
+| ----------- | ------------------------------------------------------------------------------------------------------------ |
+| 前端框架    | [Vue 3](https://vuejs.org/), [Vite](https://vitejs.dev/)                                                     |
+| 狀態管理    | [Pinia](https://pinia.vuejs.org/)                                                                            |
+| UI 元件     | [Naive UI](https://www.naiveui.com/), [Tailwind CSS](https://tailwindcss.com/)                               |
+| 地圖系統    | [Leaflet](https://leafletjs.com/), [leaflet.markercluster](https://github.com/Leaflet/Leaflet.markercluster) |
+| Cookie 管理 | [js-cookie](https://github.com/js-cookie/js-cookie)                                                          |
 
-### Compile and Hot-Reload for Development
+---
 
-```sh
-npm run dev
-```
+## 📜 版權與聲明
 
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+- 本專案為個人前端實作練習用途，無商業用途，僅供技術展示與學習用途。
+- 若內容涉及第三方素材（如圖片或資料），其著作權皆歸原作者所有。若有侵權問題請來信通知，將儘快移除。
