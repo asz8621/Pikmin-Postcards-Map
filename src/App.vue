@@ -19,17 +19,15 @@ const themeOverrides = {
   <n-config-provider :theme-overrides="themeOverrides" preflight-style-disabled>
     <n-message-provider>
       <n-dialog-provider>
-        <div id="app">
-          <div
-            v-if="isAppLoading"
-            class="fixed inset-0 z-[9999] bg-white/80 flex items-center flex-col justify-center"
-          >
-            <img src="@/assets/images/loading.gif" alt="" width="84" />
-            <p>加載中，請稍後</p>
-          </div>
-
-          <router-view />
+        <div
+          v-if="isAppLoading"
+          class="fixed inset-0 z-[9999] bg-white/80 flex items-center flex-col justify-center"
+        >
+          <img src="@/assets/images/loading.gif" alt="" width="84" />
+          <p>加載中，請稍後</p>
         </div>
+
+        <router-view />
       </n-dialog-provider>
     </n-message-provider>
   </n-config-provider>
