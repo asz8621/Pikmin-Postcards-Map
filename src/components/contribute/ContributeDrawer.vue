@@ -91,10 +91,12 @@ const onDrawerShowChange = (show) => {
         >
           <div class="w-full p-2 sm:p-4">
             <div class="flex items-center">
-              <img
+              <n-image
                 :src="item.image"
                 :alt="item.name"
+                preview-disabled
                 class="w-[80px] h-[80px] object-cover mr-4 rounded-lg"
+                fallback-src="/img-error.png"
               />
 
               <div>
