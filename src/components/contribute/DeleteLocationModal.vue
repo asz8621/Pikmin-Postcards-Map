@@ -22,6 +22,11 @@ const handleDeleteLocation = async () => {
     return
   }
 
+  if (modalData.value.id === 1) {
+    errorMsg('Demo 資料無法刪除，請自行新增資料後再操作')
+    return
+  }
+
   modalLoading.value = true
 
   try {

@@ -38,8 +38,14 @@ const handleResetPassword = async () => {
     return
   }
 
-  modalLoading.value = true
   const id = userData.value.id
+
+  if (id === 1) {
+    errorMsg('Demo 帳號不能修改密碼')
+    return
+  }
+
+  modalLoading.value = true
 
   try {
     const res = await axios.put(`/user/reset-password/${id}`, passwordForm.value)

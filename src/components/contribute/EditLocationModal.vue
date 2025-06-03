@@ -162,6 +162,11 @@ const handleEditLocation = async () => {
     formData.append(key, value)
   }
 
+  if (apiData.id === 1) {
+    errorMsg('Demo 資料無法更新，請自行新增資料後再操作')
+    return
+  }
+
   modalLoading.value = true
 
   try {

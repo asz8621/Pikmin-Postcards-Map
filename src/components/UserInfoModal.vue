@@ -42,6 +42,11 @@ const handleUpdateUserInfo = async () => {
     return
   }
 
+  if (id === 1) {
+    errorMsg('Demo 帳號不能修改暱稱')
+    return
+  }
+
   modalLoading.value = true
 
   try {
