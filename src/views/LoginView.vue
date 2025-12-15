@@ -48,7 +48,7 @@ const login = async () => {
 
 <template>
   <div
-    class="flex justify-center items-start min-h-screen bg-login bg-center bg-center p-4 xs:p-0 xs:items-center"
+    class="flex justify-center items-start min-h-screen bg-login bg-center p-4 xs:p-0 xs:items-center"
   >
     <div
       class="w-full xs:w-[400px] p-6 bg-green-50/90 rounded-lg shadow-lg mt-[100px] xs:mt-0 transition-width duration-500 ease-in-out"
