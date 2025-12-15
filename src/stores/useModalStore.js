@@ -29,6 +29,15 @@ export const useModalStore = defineStore('modal', () => {
     modalStates.value[modalName] = false
   }
 
+  // 用來關閉所有的 modal
+  const closeAllModals = () => {
+    Object.keys(modalStates.value).forEach((key) => {
+      modalStates.value[key] = false
+    })
+    modalData.value = null
+    modalLoading.value = false
+  }
+
   return {
     modalLoading,
     modalStates,
@@ -36,5 +45,6 @@ export const useModalStore = defineStore('modal', () => {
     validateErrorMsg,
     openModal,
     closeModal,
+    closeAllModals,
   }
 })
