@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useMapStore } from '@/stores/useMapStore'
@@ -83,21 +83,16 @@ const handleSelect = async (key) => {
   }
 }
 
-onMounted(async () => {
-  const [userResult, mapResult] = await Promise.allSettled([fetchUserData(), fetchMapData()])
-
-  if (userResult.status === 'fulfilled' && mapResult.status === 'fulfilled') {
+Promise.all([fetchUserData(), fetchMapData()])
+  .then(() => {
     isDataReady.value = true
+  })
+  .catch((err) => {
+    errorMsg(err.response?.data?.message || '資料載入失敗')
+  })
+  .finally(() => {
     closeAppLoading()
-  } else {
-    if (userResult.status === 'rejected') {
-      errorMsg(userResult.reason?.response?.data?.message || '使用者資料取得失敗')
-    }
-    if (mapResult.status === 'rejected') {
-      errorMsg(mapResult.reason?.response?.data?.message || '地圖資料取得失敗')
-    }
-  }
-})
+  })
 
 // 登出
 const handleLogout = async () => {

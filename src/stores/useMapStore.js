@@ -34,7 +34,9 @@ export const useMapStore = defineStore('map', () => {
         ? featuresFilter.value.every((fid) => location.features.some((f) => f.id === fid))
         : true
 
-      return (hasType || hasFeature || inBounds) && typeMatch && featureMatch
+      if (!hasType && !hasFeature) return inBounds
+
+      return inBounds && typeMatch && featureMatch
     })
 
     mapData.value = filtered
