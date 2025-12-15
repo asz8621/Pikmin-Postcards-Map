@@ -1,17 +1,41 @@
 <script setup>
-import { computed, h } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import mushroomIcon from '@/assets/images/mushroom.png'
 import flowerIcon from '@/assets/images/flower.png'
 import questionMark from '@/assets/images/question-mark.png'
 import { useModalStore } from '@/stores/useModalStore'
 import { useAppMessage } from '@/composables/useAppMessage'
+import { formatTimezone } from '@/utils/formatDate'
 
 const { successMsg, errorMsg } = useAppMessage()
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
 const { modalData, modalStates } = storeToRefs(modalStore)
+
+const currentTime = ref(formatTimezone())
+let timer = null
+
+// 取得目前點位時間
+const updateLocationTime = () => {
+  currentTime.value = formatTimezone(modalData.value?.time_zone)
+}
+
+watch(
+  () => modalStates.value.postcard,
+  (isOpen) => {
+    if (isOpen) {
+      updateLocationTime()
+      timer = setInterval(updateLocationTime, 1000)
+    } else {
+      if (timer) {
+        clearInterval(timer)
+        timer = null
+      }
+    }
+  },
+)
 
 const getTypeIcon = (type) => {
   switch (type) {
@@ -25,7 +49,11 @@ const getTypeIcon = (type) => {
 }
 
 // 取得經緯度字串
-const coordinates = computed(() => `${modalData.value?.lat}, ${modalData.value?.long}`)
+const coordinates = computed(() => {
+  const lat = modalData.value?.lat ?? 'N/A'
+  const long = modalData.value?.long ?? 'N/A'
+  return `${lat}, ${long}`
+})
 
 // n-image 預覽圖工具列
 const customToolbar = ({ nodes }) => {
@@ -75,26 +103,35 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
         </n-space>
       </div>
 
-      <div class="flex-1">
+      <div class="flex-1 flex flex-col gap-2">
         <div>
           <h3 class="font-bold text-base">{{ modalData?.name }}</h3>
           <span class="text-xs text-gray-400">{{ modalData?.country }}, {{ modalData?.city }}</span>
         </div>
-        <n-space align="center" class="my-2">
-          <span>{{ modalData?.lat }}, {{ modalData?.long }}</span>
-          <n-button
-            quaternary
-            circle
-            size="small"
-            v-clipboard:copy="coordinates"
-            v-clipboard:success="onCopy"
-            v-clipboard:error="onError"
-          >
-            <template #icon>
-              <SvgIcon name="copy" />
-            </template>
-          </n-button>
-        </n-space>
+
+        <div class="flex flex-col">
+          <span>時間</span>
+          <span>{{ currentTime }}</span>
+        </div>
+
+        <div class="flex flex-col">
+          <span>位置</span>
+          <div class="flex items-center">
+            <span>{{ modalData?.lat }}, {{ modalData?.long }}</span>
+            <n-button
+              quaternary
+              circle
+              size="small"
+              v-clipboard:copy="coordinates"
+              v-clipboard:success="onCopy"
+              v-clipboard:error="onError"
+            >
+              <template #icon>
+                <SvgIcon name="copy" />
+              </template>
+            </n-button>
+          </div>
+        </div>
       </div>
     </div>
 
