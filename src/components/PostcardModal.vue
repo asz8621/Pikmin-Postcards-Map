@@ -1,12 +1,10 @@
 <script setup>
 import { computed, h, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import mushroomIcon from '@/assets/images/mushroom.png'
-import flowerIcon from '@/assets/images/flower.png'
-import questionMark from '@/assets/images/question-mark.png'
 import { useModalStore } from '@/stores/useModalStore'
 import { useAppMessage } from '@/composables/useAppMessage'
 import { formatTimezone } from '@/utils/formatDate'
+import { getTypeIcon } from '@/utils/typeIcon'
 
 const { successMsg, errorMsg } = useAppMessage()
 
@@ -36,17 +34,6 @@ watch(
     }
   },
 )
-
-const getTypeIcon = (type) => {
-  switch (type) {
-    case 'mushroom':
-      return mushroomIcon
-    case 'flower':
-      return flowerIcon
-    default:
-      return questionMark
-  }
-}
 
 // 取得經緯度字串
 const coordinates = computed(() => {

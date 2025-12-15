@@ -1,13 +1,11 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import mushroomIcon from '@/assets/images/mushroom.png'
-import flowerIcon from '@/assets/images/flower.png'
-import questionMark from '@/assets/images/question-mark.png'
 import { useModalStore } from '@/stores/useModalStore'
 import { useInfoStore } from '@/stores/useInfoStore'
 import EditLocationModal from '@/components/contribute/EditLocationModal.vue'
 import DeleteLocationModal from '@/components/contribute/DeleteLocationModal.vue'
+import { getTypeIcon } from '@/utils/typeIcon'
 
 const infoStore = useInfoStore()
 const { contribute } = storeToRefs(infoStore)
@@ -32,17 +30,6 @@ const checkStrategyAlert = computed(() => {
       return ''
   }
 })
-
-const getModelIcon = (type) => {
-  switch (type) {
-    case 'mushroom':
-      return mushroomIcon
-    case 'flower':
-      return flowerIcon
-    default:
-      return questionMark
-  }
-}
 
 const statusMap = {
   approved: { text: '已通過', type: 'success' },
@@ -102,7 +89,7 @@ const onDrawerShowChange = (show) => {
               <div>
                 <div class="inline-flex items-center">
                   <img
-                    :src="getModelIcon(item.type)"
+                    :src="getTypeIcon(item.type)"
                     :alt="`${item.type}-icon`"
                     class="w-6 h-6 object-cover mr-2"
                   />
