@@ -1,9 +1,10 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
 import axios from '@/plugins/axios'
 import { useAppMessage } from '@/composables/useAppMessage'
+import { joinRoom } from '@/plugins/socket'
 
 const router = useRouter()
 
@@ -44,6 +45,10 @@ const login = async () => {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  joinRoom('login', null)
+})
 </script>
 
 <template>

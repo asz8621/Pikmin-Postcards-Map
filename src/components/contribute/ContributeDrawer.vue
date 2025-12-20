@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModalStore } from '@/stores/useModalStore'
 import { useInfoStore } from '@/stores/useInfoStore'
 import EditLocationModal from '@/components/contribute/EditLocationModal.vue'
 import DeleteLocationModal from '@/components/contribute/DeleteLocationModal.vue'
 import { getTypeIcon } from '@/utils/typeIcon'
+import { socket } from '@/plugins/socket'
 
 const infoStore = useInfoStore()
 const { contribute } = storeToRefs(infoStore)
@@ -45,6 +46,26 @@ const onDrawerShowChange = (show) => {
     checkStrategy.value = 'all'
   }
 }
+
+onMounted(() => {
+  socket.on('info', (socketData) => {
+    const { data } = socketData
+    if (data.name) {
+      // 修改
+      const index = contribute.value.findIndex((item) => item.id === data.id)
+      if (index !== -1) {
+        contribute.value[index] = data
+      }
+    } else {
+      // 刪除
+      contribute.value = contribute.value.filter((item) => item.id !== data.id)
+    }
+  })
+})
+
+onUnmounted(() => {
+  socket.off('info')
+})
 </script>
 
 <template>

@@ -10,6 +10,23 @@ export const useMapStore = defineStore('map', () => {
 
   const isFiltered = computed(() => !!typeFilter.value || featuresFilter.value.length > 0)
 
+  const addLocation = (newData) => {
+    mapAllData.value.push(newData)
+  }
+
+  const updateLocation = (id, newData) => {
+    const index = mapAllData.value.findIndex((item) => item.id === id)
+    if (index !== -1) {
+      mapAllData.value[index] = { ...mapAllData.value[index], ...newData }
+    } else {
+      addLocation(newData)
+    }
+  }
+
+  const removeLocation = (id) => {
+    mapAllData.value = mapAllData.value.filter((item) => item.id !== id)
+  }
+
   const fetchMapData = async () => {
     try {
       const res = await axios.get('/user/locations')
@@ -52,5 +69,8 @@ export const useMapStore = defineStore('map', () => {
     applyFilter,
     fetchMapData,
     setVisibleItems,
+    addLocation,
+    updateLocation,
+    removeLocation,
   }
 })

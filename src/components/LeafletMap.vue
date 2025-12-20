@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet.markercluster'
 
@@ -11,17 +11,21 @@ import questionMark from '@/assets/images/question-mark.png'
 import { useMapStore } from '@/stores/useMapStore'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
+import { useAppMessage } from '@/composables/useAppMessage'
 import { storeToRefs } from 'pinia'
+import { socket, joinRoom } from '@/plugins/socket'
 
 const mapStore = useMapStore()
 const { mapData, typeFilter, featuresFilter, isFiltered } = storeToRefs(mapStore)
-const { applyFilter, setVisibleItems } = mapStore
+const { applyFilter, setVisibleItems, addLocation, updateLocation, removeLocation } = mapStore
 
 const infoStore = useInfoStore()
-const { features } = storeToRefs(infoStore)
+const { features, userData } = storeToRefs(infoStore)
 
 const modalStore = useModalStore()
 const { openModal } = modalStore
+
+const { errorMsg } = useAppMessage()
 
 let map = null
 const zoomLevel = ref(16)
@@ -108,8 +112,8 @@ const initMap = () => {
     setVisibleItems(filtered)
   })
 
-  map.on('locationerror', (e) => {
-    alert('無法獲取位置，使用預設座標', e.message)
+  map.on('locationerror', () => {
+    errorMsg('無法獲取位置，使用預設座標')
   })
 
   map.locate({ setView: true, maxZoom })
@@ -148,6 +152,39 @@ watch(
 
 onMounted(() => {
   initMap()
+
+  joinRoom('map', userData.value?.id || null)
+
+  socket.on('location', (socketData) => {
+    const { method, data } = socketData
+
+    switch (method) {
+      case 'create':
+        addLocation(data)
+        break
+      case 'update':
+        if (!data) return
+        updateLocation(data.id, data)
+        break
+      case 'delete':
+        removeLocation(data.id)
+        break
+      default:
+        errorMsg(`未知的方法: ${method}`)
+        return
+    }
+
+    // 重新套用篩選並更新地圖顯示
+    if (map) {
+      const bounds = map.getBounds()
+      const filtered = applyFilter(bounds)
+      setVisibleItems(filtered)
+    }
+  })
+})
+
+onUnmounted(() => {
+  socket.off('location')
 })
 </script>
 
