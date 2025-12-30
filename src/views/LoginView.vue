@@ -77,8 +77,8 @@ const initiateOAuth = (provider) => {
     localStorage.setItem('oauth_state', state)
 
     // 跳轉到後端的 OAuth 端點 (注意使用完整的後端 URL)
-    const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3006'
-    window.location.href = `${backendUrl}/api/v1/auth/${provider}?state=${state}`
+    const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3006/api/v1'
+    window.location.href = `${backendUrl}/auth/${provider}?state=${state}`
   } catch (error) {
     errorMsg(`${provider === 'google' ? 'Google' : 'Facebook'} 登入錯誤: ${error}`)
     loading.value = false
