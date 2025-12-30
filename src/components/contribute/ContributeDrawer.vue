@@ -166,9 +166,9 @@ onUnmounted(() => {
       />
     </n-drawer-content>
 
-    <EditLocationModal class="w-full xs:w-[520px] m-4 xs:m-auto" />
+    <EditLocationModal class="w-full xs:w-[520px] m-4 xs:mx-auto" />
 
-    <DeleteLocationModal class="w-full xs:w-[420px] m-4 xs:m-auto" />
+    <DeleteLocationModal class="w-full xs:w-[420px] m-4 xs:mx-auto" />
   </n-drawer>
 </template>
 

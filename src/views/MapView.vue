@@ -150,13 +150,13 @@ const handleLogout = async () => {
 
       <ContributeDrawer />
 
-      <PostcardModal class="w-full xs:w-[520px] m-4 xs:m-auto" />
+      <PostcardModal class="w-full xs:w-[520px] m-4 xs:mx-auto" />
 
-      <ResetPasswordModal class="w-full xs:w-[420px] m-4 xs:m-auto" />
+      <ResetPasswordModal class="w-full xs:w-[420px] m-4 xs:mx-auto" />
 
-      <UploadLocationModal class="w-full xs:w-[420px] m-4 xs:m-auto" />
+      <UploadLocationModal class="w-full xs:w-[420px] m-4 xs:mx-auto" />
 
-      <UserInfoModal class="w-full xs:w-[420px] m-4 xs:m-auto" />
+      <UserInfoModal class="w-full xs:w-[420px] m-4 xs:mx-auto" />
     </n-layout-content>
   </n-layout>
 </template>

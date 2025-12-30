@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, useTemplateRef, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppMessage } from '@/composables/useAppMessage'
 import { useInfoStore } from '@/stores/useInfoStore'
@@ -15,7 +15,7 @@ const modalStore = useModalStore()
 const { closeModal } = modalStore
 const { modalStates, modalLoading, validateErrorMsg } = storeToRefs(modalStore)
 
-const uploadLocationFormRef = ref(null)
+const uploadLocationFormRef = useTemplateRef('uploadLocationFormRef')
 const locationFormData = ref({
   image: null,
   imageFile: null,
@@ -71,6 +71,10 @@ const rules = {
     },
   ],
 }
+
+const fileListClass = computed(() => {
+  return locationFormData.value.imageFile ? 'uploaded-image-list has-file' : 'uploaded-image-list'
+})
 
 // 清除表單資料
 const resetLocationFormData = () => {
@@ -295,6 +299,7 @@ watch(
           accept=".png,.jpg"
           list-type="image"
           :max="1"
+          :file-list-class="fileListClass"
           :custom-request="customUpload"
           :on-before-upload="beforeUpload"
           :on-remove="handleRemove"
@@ -348,4 +353,15 @@ watch(
   </n-modal>
 </template>
 
-<style lang="scss"></style>
+<style lang="scss">
+.uploaded-image-list {
+  display: flex;
+  height: 0px;
+  &.has-file {
+    height: 80px;
+  }
+  .n-upload-file {
+    width: 100%;
+  }
+}
+</style>
