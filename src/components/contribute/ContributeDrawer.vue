@@ -110,7 +110,7 @@ onUnmounted(() => {
               <div>
                 <div class="inline-flex items-center">
                   <img
-                    :src="getTypeIcon(item.type)"
+                    :src="getTypeIcon(item.type, item.explore)"
                     :alt="`${item.type}-icon`"
                     class="w-6 h-6 object-cover mr-2"
                   />

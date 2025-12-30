@@ -74,7 +74,13 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
   >
     <template #header>
       <div class="flex items-center">
-        <img :src="getTypeIcon(modalData?.type)" alt="" width="24" height="24" class="mr-2" />
+        <img
+          :src="getTypeIcon(modalData?.type, modalData?.explore)"
+          alt=""
+          width="24"
+          height="24"
+          class="mr-2"
+        />
         <h3 class="text-base font-bold">明信片資訊</h3>
       </div>
     </template>
