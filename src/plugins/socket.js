@@ -1,8 +1,6 @@
 import { io } from 'socket.io-client'
 
-const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3006'
-// 移除 /api/v1 路徑,只保留伺服器根 URL
-const socketUrl = apiUrl.replace(/\/api\/v\d+$/, '')
+const socketUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3006'
 
 let currentRoom = null
 
