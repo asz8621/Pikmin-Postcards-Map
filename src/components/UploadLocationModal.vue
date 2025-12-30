@@ -37,7 +37,7 @@ const rules = {
       key: 'imageFile',
       required: true,
       validator: (_, value) => {
-        const result = validateImageFile(value, 'rrrrrrrr')
+        const result = validateImageFile(value)
         return result
       },
       trigger: ['change', 'blur'],
