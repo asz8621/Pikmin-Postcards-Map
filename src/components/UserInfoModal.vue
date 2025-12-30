@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, useTemplateRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
@@ -16,13 +16,24 @@ const infoStore = useInfoStore()
 const { setUserData } = infoStore
 const { userData } = storeToRefs(infoStore)
 
-const userInfoFormRef = ref(null)
+const userInfoFormRef = useTemplateRef('userInfoFormRef')
 const userInfoForm = ref({
   username: null,
+  email: null,
 })
+
+const clearFormData = () => {
+  Object.keys(userInfoForm.value).forEach((key) => {
+    userInfoForm.value[key] = null
+  })
+}
 
 const userInfoRules = {
   username: [{ required: true, message: '請輸入暱稱', trigger: 'blur' }],
+  email: [
+    { required: true, message: '請輸入信箱', trigger: 'blur' },
+    { type: 'email', message: '請輸入有效的信箱格式', trigger: ['blur', 'input'] },
+  ],
 }
 
 const handleUpdateUserInfo = async () => {
@@ -53,7 +64,8 @@ const handleUpdateUserInfo = async () => {
     const res = await axios.put(`/user/update/${id}`, userInfoForm.value)
     const { data } = res.data
     setUserData(data)
-    successMsg(res?.message || '修改成功')
+    console.log(res)
+    successMsg(res?.data?.message || '修改成功')
     closeModal('userInfo')
   } catch (err) {
     errorMsg(err.response?.data?.message || '修改失敗')
@@ -67,7 +79,7 @@ watch(
   () => modalStates.value.userInfo,
   (newVal, oldVal) => {
     if (newVal) userInfoForm.value = { ...userData.value }
-    if (oldVal) userInfoForm.value.username = null
+    if (oldVal) clearFormData()
   },
 )
 </script>
@@ -90,6 +102,9 @@ watch(
     >
       <n-form-item label="暱稱" path="username">
         <n-input v-model:value="userInfoForm.username" placeholder="請輸入暱稱" />
+      </n-form-item>
+      <n-form-item label="信箱" path="email">
+        <n-input v-model:value="userInfoForm.email" placeholder="請輸入信箱" />
       </n-form-item>
     </n-form>
 
