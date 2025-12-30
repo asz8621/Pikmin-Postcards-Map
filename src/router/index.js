@@ -13,6 +13,16 @@ const routes = [
     component: () => import('@/views/LoginView.vue'),
   },
   {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/RegisterView.vue'),
+  },
+  {
+    path: '/auth/check',
+    name: 'auth-check',
+    component: () => import('@/views/AuthCheck.vue'),
+  },
+  {
     path: '/map',
     name: 'map',
     component: () => import('@/views/MapView.vue'),
@@ -30,7 +40,7 @@ const router = createRouter({
   routes,
 })
 
-const excludedRoutes = ['login', 'NotFound']
+const excludedRoutes = ['login', 'register', 'forgot-password', 'reset-password', 'NotFound']
 
 router.beforeEach((to, from, next) => {
   const loadingStore = useLoadingStore()

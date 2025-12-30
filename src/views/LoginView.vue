@@ -1,10 +1,13 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
 import axios from '@/plugins/axios'
 import { useAppMessage } from '@/composables/useAppMessage'
 import { joinRoom } from '@/plugins/socket'
+import AuthLayout from '@/components/AuthLayout.vue'
+import FormInput from '@/components/FormInput.vue'
+import SocialLogin from '@/components/SocialLogin.vue'
 
 const router = useRouter()
 
@@ -16,21 +19,26 @@ const loginData = ref({
 })
 
 const loading = ref(false)
+const formLoading = ref(false)
 
-const loginFormRef = ref(null)
+const loginFormRef = useTemplateRef('loginFormRef')
 const rules = {
   account: [{ required: true, message: '請輸入帳號', trigger: 'blur' }],
   password: [{ required: true, message: '請輸入密碼', trigger: 'blur' }],
 }
 
 const login = async () => {
-  await loginFormRef.value?.validate()
-  loading.value = true
   try {
+    await loginFormRef.value?.validate()
+
+    loading.value = true
+    formLoading.value = true
+
     const res = await axios.post('/user/login', {
       account: loginData.value.account,
       password: loginData.value.password,
     })
+
     const token = res.data.data.token
     if (token) {
       Cookies.set('token', token, { expires: 1 })
@@ -40,8 +48,39 @@ const login = async () => {
       errorMsg('登入失敗：無法驗證用戶')
     }
   } catch (err) {
-    errorMsg(err.response?.data?.message || '登入錯誤，請聯絡管理員')
+    // 表單驗證錯誤不顯示錯誤訊息
+    if (typeof err === 'object' && Array.isArray(err)) return
+
+    if (err.response?.data?.message) {
+      errorMsg(err.response.data.message)
+    } else {
+      errorMsg('登入錯誤，請聯絡管理員')
+    }
   } finally {
+    loading.value = false
+    formLoading.value = false
+  }
+}
+
+const generateRandomState = () => {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+}
+
+const initiateOAuth = (provider) => {
+  if (loading.value) return
+
+  loading.value = true
+
+  try {
+    // 產生隨機 state 防 CSRF
+    const state = generateRandomState()
+    localStorage.setItem('oauth_state', state)
+
+    // 跳轉到後端的 OAuth 端點 (注意使用完整的後端 URL)
+    const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3006'
+    window.location.href = `${backendUrl}/api/v1/auth/${provider}?state=${state}`
+  } catch (error) {
+    errorMsg(`${provider === 'google' ? 'Google' : 'Facebook'} 登入錯誤: ${error}`)
     loading.value = false
   }
 }
@@ -52,41 +91,44 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    class="flex justify-center items-start min-h-screen bg-login bg-center p-4 xs:p-0 xs:items-center"
-  >
-    <div
-      class="w-full xs:w-[400px] p-6 bg-green-50/90 rounded-lg shadow-lg mt-[100px] xs:mt-0 transition-width duration-500 ease-in-out"
+  <AuthLayout>
+    <n-form
+      ref="loginFormRef"
+      class="mb-2"
+      :model="loginData"
+      :rules="rules"
+      :disabled="loading"
+      :show-require-mark="false"
+      @keydown.enter.prevent="login"
     >
-      <h1 class="text-3xl font-semibold text-center text-green-600 mb-6">
-        <img src="@/assets/images/logo.png" alt="logo" class="mx-auto" />
-      </h1>
+      <FormInput v-model="loginData.account" path="account" placeholder="請輸入帳號" icon="user" />
 
-      <n-form
-        ref="loginFormRef"
-        :model="loginData"
-        :rules="rules"
-        :disabled="loading"
-        :show-require-mark="false"
-        @keydown.enter.prevent="login"
-      >
-        <n-form-item label="帳號" path="account">
-          <n-input v-model:value="loginData.account" placeholder="請輸入帳號" />
-        </n-form-item>
-        <n-form-item label="密碼" path="password">
-          <n-input
-            v-model:value="loginData.password"
-            type="password"
-            placeholder="請輸入密碼"
-            show-password-on="click"
-          />
-        </n-form-item>
-        <n-button type="primary" block :loading="loading" :disabled="loading" @click="login">
-          登入
-        </n-button>
-      </n-form>
+      <FormInput
+        v-model="loginData.password"
+        path="password"
+        type="password"
+        placeholder="請輸入密碼"
+        icon="key"
+        show-password-on="click"
+      />
+
+      <n-button type="primary" block :loading="formLoading" :disabled="loading" @click="login">
+        登入
+      </n-button>
+    </n-form>
+
+    <div class="flex justify-end items-center mb-2">
+      <n-button type="text" size="small" :disabled="loading" @click="router.push('/register')">
+        註冊帳號
+      </n-button>
     </div>
-  </div>
+
+    <SocialLogin
+      :loading="loading"
+      @facebook-login="initiateOAuth('facebook')"
+      @google-login="initiateOAuth('google')"
+    />
+  </AuthLayout>
 </template>
 
 <style lang="scss" scoped></style>

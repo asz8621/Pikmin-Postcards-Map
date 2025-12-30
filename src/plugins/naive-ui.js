@@ -30,6 +30,7 @@ import {
   NRadioButton,
   NText,
   NEllipsis,
+  NDivider,
 } from 'naive-ui'
 
 export const naive = create({
@@ -64,5 +65,6 @@ export const naive = create({
     NRadioButton,
     NText,
     NEllipsis,
+    NDivider,
   ],
 })
