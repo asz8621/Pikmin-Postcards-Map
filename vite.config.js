@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
 import path from 'path'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 
 const svgPath = path.resolve(fileURLToPath(new URL('.', import.meta.url)), 'src/assets/images/svg')
 
@@ -18,6 +19,7 @@ export default defineConfig({
       iconDirs: [svgPath],
       symbolId: '[dir]/[name]',
     }),
+    basicSsl(),
   ],
   resolve: {
     alias: {
