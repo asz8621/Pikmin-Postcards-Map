@@ -86,11 +86,28 @@ const initMap = () => {
   map = L.map('map', {
     doubleClickZoom: false,
     zoomControl: false,
+    maxBounds: [
+      // 限制地圖範圍
+      [-85, -180], // 南西角
+      [85, 180], // 北東角
+    ],
+    minZoom: 2,
+    maxZoom: 18,
+    maxBoundsViscosity: 1.0, // 防止超出邊界
   }).setView([25.033, 121.5654], zoomLevel.value)
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
     subdomains: 'abcd',
+    noWrap: true,
+    // 設定瓦片邊界，防止無效請求
+    bounds: [
+      [-85, -180],
+      [85, 180],
+    ],
+    // 錯誤處理
+    errorTileUrl:
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=',
   }).addTo(map)
 
   L.control.zoom({ position: 'bottomright' }).addTo(map)
