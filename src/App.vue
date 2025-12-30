@@ -21,7 +21,7 @@ const themeOverrides = {
       <n-dialog-provider>
         <div
           v-if="isAppLoading"
-          class="fixed inset-0 z-[9999] bg-white/80 flex items-center flex-col justify-center"
+          class="fixed inset-0 z-[999] bg-white/80 flex items-center flex-col justify-center"
         >
           <img src="@/assets/images/loading.gif" alt="" width="84" />
           <p>加載中，請稍後</p>
