@@ -10,6 +10,11 @@ const { mapData, isFiltered } = storeToRefs(mapStore)
 const modalStore = useModalStore()
 const { openModal } = modalStore
 
+const openLightbox = ref(true)
+
+const tabPosition = computed(() => (openLightbox.value ? 'bottom-[100px]' : 'bottom-0'))
+const stripPosition = computed(() => (openLightbox.value ? 'bottom-0' : '-bottom-[100px]'))
+
 const modeText = computed(() => {
   return isFiltered.value ? '篩選模式' : '一般模式'
 })
@@ -39,12 +44,25 @@ const isLoaded = (url) => loadedImages.value.has(url)
 </script>
 
 <template>
-  <div class="absolute bottom-[100px] left-0 bg-black/50 px-2 py-1.5 rounded-t-lg text-white z-[2]">
-    {{ modeText }}
+  <div
+    class="absolute left-0 bg-black/50 px-2 py-1.5 rounded-t-lg cursor-pointer select-none transition-top duration-500 text-white z-[2]"
+    :class="tabPosition"
+    @click="openLightbox = !openLightbox"
+  >
+    <div class="flex items-center">
+      {{ modeText }}
+      <div
+        class="size-4 ml-2 transition-transform duration-500"
+        :class="{ 'rotate-180': !openLightbox }"
+      >
+        <SvgIcon name="double-arrow" color="#FFFFFF" />
+      </div>
+    </div>
   </div>
 
   <div
-    class="absolute bottom-0 left-0 w-full h-[100px] bg-black/50 p-2 z-[3] rounded-tr-lg overflow-x-auto flex flex-nowrap items-center space-x-2 touch-pan-x"
+    class="absolute left-0 w-full h-[100px] bg-black/50 p-2 rounded-tr-lg overflow-x-auto flex flex-nowrap items-center space-x-2 touch-pan-x transition-top duration-500 z-[3]"
+    :class="stripPosition"
     style="-webkit-overflow-scrolling: touch"
   >
     <template v-if="mapData.length > 0">
