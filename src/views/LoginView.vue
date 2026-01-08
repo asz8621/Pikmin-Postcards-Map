@@ -117,7 +117,16 @@ onMounted(() => {
       </n-button>
     </n-form>
 
-    <div class="flex justify-end items-center mb-2">
+    <div class="flex justify-between items-center mb-2">
+      <n-button
+        type="primary"
+        size="small"
+        text
+        :disabled="loading"
+        @click="router.push('/forgot-password')"
+      >
+        忘記密碼？
+      </n-button>
       <n-button type="text" size="small" :disabled="loading" @click="router.push('/register')">
         註冊帳號
       </n-button>

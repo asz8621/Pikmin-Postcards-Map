@@ -23,6 +23,16 @@ const routes = [
     component: () => import('@/views/AuthCheck.vue'),
   },
   {
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: () => import('@/views/ForgotPasswordView.vue'),
+  },
+  {
+    path: '/reset-password',
+    name: 'reset-password',
+    component: () => import('@/views/ResetPasswordView.vue'),
+  },
+  {
     path: '/map',
     name: 'map',
     component: () => import('@/views/MapView.vue'),
