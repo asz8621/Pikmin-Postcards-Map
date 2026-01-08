@@ -5,6 +5,7 @@ import axios from '@/plugins/axios'
 import { useAppMessage } from '@/composables/useAppMessage'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
+import AuthFooterTip from '@/components/AuthFooterTip.vue'
 
 const router = useRouter()
 const { successMsg, errorMsg } = useAppMessage()
@@ -89,12 +90,12 @@ const sendResetEmail = async () => {
       </n-button>
     </n-form>
 
-    <div class="flex justify-center items-center">
-      <span class="text-gray-600">想起密碼了？</span>
-      <n-button type="text" size="small" :disabled="loading" @click="router.push('/login')">
-        返回登入
-      </n-button>
-    </div>
+    <AuthFooterTip
+      tip-text="想起密碼了？"
+      button-text="返回登入"
+      route-to="/login"
+      :disabled="loading"
+    />
   </AuthLayout>
 </template>
 

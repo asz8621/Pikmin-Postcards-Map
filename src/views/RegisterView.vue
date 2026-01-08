@@ -3,6 +3,7 @@ import { ref, useTemplateRef, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/plugins/axios'
 import { useAppMessage } from '@/composables/useAppMessage'
+import AuthFooterTip from '@/components/AuthFooterTip.vue'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import { joinRoom } from '@/plugins/socket'
@@ -168,12 +169,12 @@ onMounted(() => {
       </n-button>
     </n-form>
 
-    <div class="flex justify-center items-center">
-      <span class="text-gray-600">已有帳號？</span>
-      <n-button type="text" size="small" :disabled="loading" @click="router.push('/login')">
-        立即登入
-      </n-button>
-    </div>
+    <AuthFooterTip
+      tip-text="已有帳號？"
+      button-text="立即登入"
+      route-to="/login"
+      :disabled="loading"
+    />
   </AuthLayout>
 </template>
 
