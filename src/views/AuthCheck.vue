@@ -2,11 +2,10 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
-import { useAppMessage } from '@/composables/useAppMessage'
+import { successMsg, errorMsg } from '@/utils/appMessage'
 import axios from '@/plugins/axios'
 
 const router = useRouter()
-const { successMsg, errorMsg } = useAppMessage()
 
 onMounted(() => {
   const urlParams = new URLSearchParams(window.location.search)

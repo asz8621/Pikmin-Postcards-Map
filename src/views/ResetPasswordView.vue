@@ -2,13 +2,12 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from '@/plugins/axios'
-import { useAppMessage } from '@/composables/useAppMessage'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
+import { successMsg, errorMsg } from '@/utils/appMessage'
 
 const router = useRouter()
 const route = useRoute()
-const { successMsg, errorMsg } = useAppMessage()
 
 const resetData = ref({
   password: '',

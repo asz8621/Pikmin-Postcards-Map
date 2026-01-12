@@ -14,11 +14,11 @@ import ContributeDrawer from '@/components/contribute/ContributeDrawer.vue'
 import UserInfoModal from '@/components/UserInfoModal.vue'
 
 import { useAuthFlow } from '@/composables/useAuthFlow'
-import { useAppMessage } from '@/composables/useAppMessage'
+
+import { successMsg, errorMsg } from '@/utils/appMessage'
 
 import axios from '@/plugins/axios'
 
-const { successMsg, errorMsg } = useAppMessage()
 const { signOut } = useAuthFlow()
 
 const infoStore = useInfoStore()

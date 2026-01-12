@@ -1,12 +1,10 @@
 <script setup>
 import { ref, watch, useTemplateRef, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useAppMessage } from '@/composables/useAppMessage'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
+import { successMsg, errorMsg } from '@/utils/appMessage'
 import axios from '@/plugins/axios'
-
-const { successMsg, errorMsg } = useAppMessage()
 
 const infoStore = useInfoStore()
 const { fetchUserData } = infoStore

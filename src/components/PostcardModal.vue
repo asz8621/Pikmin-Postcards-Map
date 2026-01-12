@@ -2,11 +2,9 @@
 import { computed, h, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModalStore } from '@/stores/useModalStore'
-import { useAppMessage } from '@/composables/useAppMessage'
+import { successMsg, errorMsg } from '@/utils/appMessage'
 import { formatTimezone } from '@/utils/formatDate'
 import { getTypeIcon } from '@/utils/typeIcon'
-
-const { successMsg, errorMsg } = useAppMessage()
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore

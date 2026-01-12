@@ -11,8 +11,9 @@ import questionMark from '@/assets/images/question-mark.png'
 import { useMapStore } from '@/stores/useMapStore'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
-import { useAppMessage } from '@/composables/useAppMessage'
 import { useSocketStore } from '@/stores/useSocketStore'
+
+import { errorMsg } from '@/utils/appMessage'
 import { storeToRefs } from 'pinia'
 
 const mapStore = useMapStore()
@@ -24,8 +25,6 @@ const { features, userData } = storeToRefs(infoStore)
 
 const modalStore = useModalStore()
 const { openModal } = modalStore
-
-const { errorMsg } = useAppMessage()
 
 const socketStore = useSocketStore()
 const { joinRoom, socketOn, socketOff } = socketStore

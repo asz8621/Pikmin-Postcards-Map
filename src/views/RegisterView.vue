@@ -2,15 +2,14 @@
 import { ref, useTemplateRef, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/plugins/axios'
-import { useAppMessage } from '@/composables/useAppMessage'
 import AuthFooterTip from '@/components/AuthFooterTip.vue'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import { useSocketStore } from '@/stores/useSocketStore'
+import { successMsg, errorMsg } from '@/utils/appMessage'
 
 const router = useRouter()
 
-const { successMsg, errorMsg } = useAppMessage()
 const socketStore = useSocketStore()
 const { joinRoom } = socketStore
 

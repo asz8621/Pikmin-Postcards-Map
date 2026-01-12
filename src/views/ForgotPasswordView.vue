@@ -2,13 +2,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/plugins/axios'
-import { useAppMessage } from '@/composables/useAppMessage'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import AuthFooterTip from '@/components/AuthFooterTip.vue'
+import { successMsg, errorMsg } from '@/utils/appMessage'
 
 const router = useRouter()
-const { successMsg, errorMsg } = useAppMessage()
 
 const forgotData = ref({
   account: '',

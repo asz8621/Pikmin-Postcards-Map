@@ -3,18 +3,16 @@ import { onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
 import axios from '@/plugins/axios'
-import { useAppMessage } from '@/composables/useAppMessage'
 import { useSocketStore } from '@/stores/useSocketStore'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import SocialLogin from '@/components/SocialLogin.vue'
+import { successMsg, errorMsg } from '@/utils/appMessage'
 
 const socketStore = useSocketStore()
 const { joinRoom } = socketStore
 
 const router = useRouter()
-
-const { successMsg, errorMsg } = useAppMessage()
 
 const loginData = ref({
   account: '',

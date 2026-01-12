@@ -1,11 +1,9 @@
 <script setup>
 import { storeToRefs } from 'pinia'
-import { useAppMessage } from '@/composables/useAppMessage'
 import { useModalStore } from '@/stores/useModalStore'
 import { useInfoStore } from '@/stores/useInfoStore'
+import { successMsg, errorMsg } from '@/utils/appMessage'
 import axios from '@/plugins/axios'
-
-const { successMsg, errorMsg } = useAppMessage()
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore

@@ -3,10 +3,8 @@ import { ref, watch, useTemplateRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
-import { useAppMessage } from '@/composables/useAppMessage'
+import { successMsg, errorMsg } from '@/utils/appMessage'
 import axios from '@/plugins/axios'
-
-const { successMsg, errorMsg } = useAppMessage()
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
