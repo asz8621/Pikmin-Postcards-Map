@@ -4,10 +4,13 @@ import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
 import axios from '@/plugins/axios'
 import { useAppMessage } from '@/composables/useAppMessage'
-import { joinRoom } from '@/plugins/socket'
+import { useSocketStore } from '@/stores/useSocketStore'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import SocialLogin from '@/components/SocialLogin.vue'
+
+const socketStore = useSocketStore()
+const { joinRoom } = socketStore
 
 const router = useRouter()
 

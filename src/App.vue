@@ -1,9 +1,18 @@
 <script setup>
+import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLoadingStore } from '@/stores/useLoadingStore'
+import { useSocketStore } from '@/stores/useSocketStore'
 
 const loadingStore = useLoadingStore()
 const { isAppLoading } = storeToRefs(loadingStore)
+
+const socketStore = useSocketStore()
+const { initSocket } = socketStore
+
+onMounted(() => {
+  initSocket()
+})
 
 const themeOverrides = {
   common: {

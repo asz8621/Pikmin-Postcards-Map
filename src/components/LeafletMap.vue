@@ -12,8 +12,8 @@ import { useMapStore } from '@/stores/useMapStore'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useAppMessage } from '@/composables/useAppMessage'
+import { useSocketStore } from '@/stores/useSocketStore'
 import { storeToRefs } from 'pinia'
-import { socket, joinRoom } from '@/plugins/socket'
 
 const mapStore = useMapStore()
 const { mapData, typeFilter, featuresFilter, isFiltered } = storeToRefs(mapStore)
@@ -26,6 +26,9 @@ const modalStore = useModalStore()
 const { openModal } = modalStore
 
 const { errorMsg } = useAppMessage()
+
+const socketStore = useSocketStore()
+const { joinRoom, socketOn, socketOff } = socketStore
 
 let map = null
 const zoomLevel = ref(16)
@@ -163,7 +166,7 @@ onMounted(() => {
 
   joinRoom('map', userData.value?.id || null)
 
-  socket.on('location', (socketData) => {
+  socketOn('location', (socketData) => {
     const { method, data } = socketData
 
     switch (method) {
@@ -192,7 +195,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  socket.off('location')
+  socketOff('location')
 })
 </script>
 

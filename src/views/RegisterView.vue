@@ -6,11 +6,13 @@ import { useAppMessage } from '@/composables/useAppMessage'
 import AuthFooterTip from '@/components/AuthFooterTip.vue'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
-import { joinRoom } from '@/plugins/socket'
+import { useSocketStore } from '@/stores/useSocketStore'
 
 const router = useRouter()
 
 const { successMsg, errorMsg } = useAppMessage()
+const socketStore = useSocketStore()
+const { joinRoom } = socketStore
 
 const registerData = ref({
   name: '',

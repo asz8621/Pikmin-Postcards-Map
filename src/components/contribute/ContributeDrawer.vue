@@ -6,7 +6,10 @@ import { useInfoStore } from '@/stores/useInfoStore'
 import EditLocationModal from '@/components/contribute/EditLocationModal.vue'
 import DeleteLocationModal from '@/components/contribute/DeleteLocationModal.vue'
 import { getTypeIcon } from '@/utils/typeIcon'
-import { socket } from '@/plugins/socket'
+import { useSocketStore } from '@/stores/useSocketStore'
+
+const socketStore = useSocketStore()
+const { socketOn, socketOff } = socketStore
 
 const infoStore = useInfoStore()
 const { contribute } = storeToRefs(infoStore)
@@ -48,7 +51,7 @@ const onDrawerShowChange = (show) => {
 }
 
 onMounted(() => {
-  socket.on('info', (socketData) => {
+  socketOn('info', (socketData) => {
     const { data } = socketData
     if (data.name) {
       // 修改
@@ -64,7 +67,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  socket.off('info')
+  socketOff('info')
 })
 </script>
 
