@@ -52,11 +52,8 @@ const login = async () => {
     // 表單驗證錯誤不顯示錯誤訊息
     if (typeof err === 'object' && Array.isArray(err)) return
 
-    if (err.response?.data?.message) {
-      errorMsg(err.response.data.message)
-    } else {
-      errorMsg('登入錯誤，請聯絡管理員')
-    }
+    const message = err.response?.data?.message || '登入錯誤，請聯絡管理員'
+    errorMsg(message)
   } finally {
     loading.value = false
     formLoading.value = false
