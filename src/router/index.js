@@ -52,13 +52,13 @@ const router = createRouter({
 
 const excludedRoutes = ['login', 'register', 'forgot-password', 'reset-password', 'NotFound']
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   const loadingStore = useLoadingStore()
   const token = Cookies.get('token')
 
   if (to.meta.requiresAuth && !token) {
     loadingStore.closeAppLoading()
-    return next('/login')
+    return '/login'
   }
 
   if (excludedRoutes.includes(to.name)) {
@@ -67,7 +67,7 @@ router.beforeEach((to, from, next) => {
     loadingStore.openAppLoading()
   }
 
-  next()
+  return true
 })
 
 export default router
