@@ -21,6 +21,7 @@ const { mapData, typeFilter, featuresFilter, isFiltered } = storeToRefs(mapStore
 const { applyFilter, setVisibleItems, addLocation, updateLocation, removeLocation } = mapStore
 
 const infoStore = useInfoStore()
+const { updateFeature, removeFeature } = infoStore
 const { features, userData } = storeToRefs(infoStore)
 
 const modalStore = useModalStore()
@@ -165,6 +166,14 @@ onMounted(() => {
 
   joinRoom('map', userData.value?.id || null)
 
+  socketOn('postcardType', (socketData) => {
+    if (socketData.method === 'update') {
+      updateFeature(socketData.data)
+    } else {
+      removeFeature(socketData.data.id)
+    }
+  })
+
   socketOn('location', (socketData) => {
     const { method, data } = socketData
 
@@ -195,6 +204,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   socketOff('location')
+  socketOff('postcardType')
 })
 </script>
 

@@ -19,6 +19,19 @@ export const useInfoStore = defineStore('info', () => {
     }
   }
 
+  const updateFeature = (data) => {
+    const featureIndex = features.value.findIndex((item) => item.id === data.id)
+    if (featureIndex !== -1) {
+      features.value[featureIndex] = data
+    } else {
+      features.value = [...features.value, data]
+    }
+  }
+
+  const removeFeature = (id) => {
+    features.value = features.value.filter((item) => item.id !== id)
+  }
+
   const setUserData = (data) => {
     userData.value = data
   }
@@ -28,6 +41,8 @@ export const useInfoStore = defineStore('info', () => {
     features,
     contribute,
     fetchUserData,
+    updateFeature,
+    removeFeature,
     setUserData,
   }
 })
