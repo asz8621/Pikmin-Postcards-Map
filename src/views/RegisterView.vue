@@ -113,7 +113,7 @@ const handlePasswordInput = async () => {
 }
 
 onMounted(() => {
-  joinRoom('login', null)
+  joinRoom('register', null)
 })
 </script>
 
