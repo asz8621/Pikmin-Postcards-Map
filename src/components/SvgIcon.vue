@@ -10,6 +10,10 @@ const props = defineProps({
     type: String,
     default: 'currentColor',
   },
+  decorative: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const svgName = computed(() => {
@@ -29,7 +33,7 @@ const svgStyle = computed(() => {
 </script>
 
 <template>
-  <svg class="svg-icon" aria-hidden="true" :style="svgStyle">
+  <svg class="svg-icon" :aria-hidden="decorative" :style="svgStyle">
     <use :xlink:href="svgName" />
   </svg>
 </template>
