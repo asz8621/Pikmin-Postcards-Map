@@ -62,7 +62,7 @@ const handleUpdateUserInfo = async () => {
     const res = await axios.put(`/user/update/${id}`, userInfoForm.value)
     const { data } = res.data
     setUserData(data)
-    console.log(res)
+
     successMsg(res?.data?.message || '修改成功')
     closeModal('userInfo')
   } catch (err) {
