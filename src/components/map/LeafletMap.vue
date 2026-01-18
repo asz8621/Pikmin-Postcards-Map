@@ -17,7 +17,7 @@ import { errorMsg } from '@/utils/appMessage'
 import { storeToRefs } from 'pinia'
 
 const mapStore = useMapStore()
-const { mapData, typeFilter, featuresFilter, isFiltered } = storeToRefs(mapStore)
+const { mapData, typeFilter, featuresFilter, isFiltered, searchResults } = storeToRefs(mapStore)
 const { applyFilter, setVisibleItems, addLocation, updateLocation, removeLocation } = mapStore
 
 const infoStore = useInfoStore()
@@ -31,7 +31,8 @@ const socketStore = useSocketStore()
 const { joinRoom, socketOn, socketOff } = socketStore
 
 let map = null
-const zoomLevel = ref(16)
+const zoomLevel = ref(6)
+const minZoom = 2
 const maxZoom = 18
 
 const typeTemp = ref(null)
@@ -57,7 +58,10 @@ const filterData = () => {
   const filtered = applyFilter(map.getBounds())
   setVisibleItems(filtered)
 
-  if (filtered.length > 0) {
+  // 如果有啟用篩選，將地圖縮放到最小級別
+  if (isFiltered.value) {
+    map.setZoom(minZoom, { animate: true })
+  } else if (filtered.length > 0) {
     const latLngs = filtered.map((item) => [item.lat, item.long])
     const bounds = L.latLngBounds(latLngs)
     map.fitBounds(bounds, { padding: [30, 30], animate: true })
@@ -89,8 +93,8 @@ const initMap = () => {
   map = L.map('map', {
     doubleClickZoom: false,
     zoomControl: false,
-    minZoom: 2,
-    maxZoom: 18,
+    minZoom,
+    maxZoom,
     maxBounds: [
       [-85, -Infinity], // 南極限制,經度不限
       [85, Infinity], // 北極限制,經度不限
@@ -160,6 +164,28 @@ watch(
     renderMarkers(newData)
   },
 )
+
+watch(
+  () => searchResults.value,
+  (newData) => {
+    if (!map || !newData?.result?.place_id) return
+
+    const { location, viewport } = newData.result
+    moveToSearchLocation(location, viewport)
+  },
+)
+
+const moveToSearchLocation = (location, viewport) => {
+  if (viewport?.northeast && viewport?.southwest) {
+    const bounds = L.latLngBounds(
+      [viewport.southwest.lat, viewport.southwest.lng],
+      [viewport.northeast.lat, viewport.northeast.lng],
+    )
+    map.fitBounds(bounds, { padding: [50, 50], animate: true })
+  } else {
+    map.setView([location.lat, location.lng], 15, { animate: true })
+  }
+}
 
 onMounted(() => {
   initMap()

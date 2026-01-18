@@ -7,6 +7,8 @@ export const useMapStore = defineStore('map', () => {
   const mapData = ref([])
   const typeFilter = ref(null)
   const featuresFilter = ref([])
+  const searchResults = ref(null)
+  const isSearch = ref(false)
 
   const isFiltered = computed(() => !!typeFilter.value || featuresFilter.value.length > 0)
 
@@ -60,12 +62,28 @@ export const useMapStore = defineStore('map', () => {
     return filtered
   }
 
+  const searchAddress = async (address) => {
+    try {
+      isSearch.value = true
+      const encodedAddress = encodeURIComponent(address.trim())
+      const res = await axios.get(`/user/geocoding/search?address=${encodedAddress}`)
+      searchResults.value = res.data.data
+    } catch (error) {
+      return Promise.reject(error)
+    } finally {
+      isSearch.value = false
+    }
+  }
+
   return {
     mapAllData,
     mapData,
     typeFilter,
     featuresFilter,
     isFiltered,
+    searchResults,
+    isSearch,
+    searchAddress,
     applyFilter,
     fetchMapData,
     setVisibleItems,
