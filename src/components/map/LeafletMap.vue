@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, shallowRef, onMounted, onBeforeUnmount, watch, markRaw } from 'vue'
 import L from 'leaflet'
 import 'leaflet.markercluster'
 
@@ -30,20 +30,16 @@ const { openModal } = modalStore
 const socketStore = useSocketStore()
 const { joinRoom, socketOn, socketOff } = socketStore
 
-let map = null
-const zoomLevel = ref(6)
-const minZoom = 2
-const maxZoom = 18
-
-const typeTemp = ref(null)
-const featuresTemp = ref([])
-
-const showFilterDrawer = ref(false)
-
-const openFilterDrawer = () => {
-  typeTemp.value = typeFilter.value
-  featuresTemp.value = [...featuresFilter.value]
-  showFilterDrawer.value = true
+const mapConfig = {
+  minZoom: 2,
+  maxZoom: 18,
+  defaultZoom: 6,
+  defaultCenter: [25.033, 121.5654],
+  maxBounds: [
+    [-85, -Infinity],
+    [85, Infinity],
+  ],
+  maxBoundsViscosity: 1.0,
 }
 
 const typeList = [
@@ -51,116 +47,250 @@ const typeList = [
   { label: '花', value: 'flower' },
 ]
 
+const mapIcons = markRaw({
+  location: L.icon({
+    iconUrl: locationIconImg,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
+  mushroom: L.icon({
+    iconUrl: mushroomIcon,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
+  flower: L.icon({
+    iconUrl: flowerIcon,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
+  default: L.icon({
+    iconUrl: questionMark,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
+})
+
+const map = shallowRef(null)
+const markerClusterGroup = shallowRef(null)
+const locationMarker = shallowRef(null)
+const zoomLevel = ref(mapConfig.defaultZoom)
+const typeTemp = ref(null)
+const featuresTemp = ref([])
+const showFilterDrawer = ref(false)
+
+const debounce = (fn, delay) => {
+  let timeoutId
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn(...args), delay)
+  }
+}
+
+const getIcon = (type) => mapIcons[type] || mapIcons.default
+
+const openFilterDrawer = () => {
+  typeTemp.value = typeFilter.value
+  featuresTemp.value = [...featuresFilter.value]
+  showFilterDrawer.value = true
+}
+
 const filterData = () => {
+  if (!map.value) return
+
   typeFilter.value = typeTemp.value
   featuresFilter.value = [...featuresTemp.value]
 
-  const filtered = applyFilter(map.getBounds())
+  const filtered = applyFilter(map.value.getBounds())
   setVisibleItems(filtered)
 
-  // 如果有啟用篩選，將地圖縮放到最小級別
+  // 根據篩選結果調整地圖視野
   if (isFiltered.value) {
-    map.setZoom(minZoom, { animate: true })
+    map.value.setZoom(mapConfig.minZoom, { animate: true })
   } else if (filtered.length > 0) {
     const latLngs = filtered.map((item) => [item.lat, item.long])
     const bounds = L.latLngBounds(latLngs)
-    map.fitBounds(bounds, { padding: [30, 30], animate: true })
+    map.value.fitBounds(bounds, { padding: [30, 30], animate: true })
   }
 
   showFilterDrawer.value = false
 }
 
 const goToCurrentLocation = () => {
-  if (!map) return
-  map.locate({ setView: true, maxZoom })
+  if (!map.value) return
+  map.value.locate({ setView: true, maxZoom: mapConfig.maxZoom })
 }
 
-const setIcon = (type) => {
-  const icons = {
-    mushroom: mushroomIcon,
-    flower: flowerIcon,
-    default: questionMark,
+const handleLocationFound = (e) => {
+  if (!map.value) return
+
+  // 移除舊的位置標記
+  if (locationMarker.value) {
+    locationMarker.value.remove()
   }
-  return L.icon({
-    iconUrl: icons[type] || icons.default,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
-  })
+
+  locationMarker.value = L.marker(e.latlng, { icon: mapIcons.location })
+  locationMarker.value.addTo(map.value).bindPopup('您的位置')
+
+  // 確保移動到使用者位置
+  map.value.setView(e.latlng, 16, { animate: true })
+
+  // 定位完成後執行 filterData
+  filterData()
 }
 
-const initMap = () => {
-  map = L.map('map', {
-    doubleClickZoom: false,
-    zoomControl: false,
-    minZoom,
-    maxZoom,
-    maxBounds: [
-      [-85, -Infinity], // 南極限制,經度不限
-      [85, Infinity], // 北極限制,經度不限
-    ],
-    maxBoundsViscosity: 1.0, // 完全禁止超出邊界
-    worldCopyJump: true, // 允許左右無限滑動並自動跳轉回主地圖
-  }).setView([25.033, 121.5654], zoomLevel.value)
+const handleLocationError = () => {
+  errorMsg('無法獲取位置，使用預設座標')
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-    subdomains: 'abcd',
-  }).addTo(map)
+  filterData()
+}
 
-  L.control.zoom({ position: 'bottomright' }).addTo(map)
+const handleMoveEnd = debounce(() => {
+  if (!map.value) return
 
-  const locationIcon = L.icon({
-    iconUrl: locationIconImg,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
-  })
+  const filtered = applyFilter(map.value.getBounds())
+  setVisibleItems(filtered)
+}, 200)
 
-  map.on('locationfound', (e) => {
-    const locationMarker = L.marker(e.latlng, { icon: locationIcon })
-    locationMarker.addTo(map).bindPopup('您的位置').openPopup()
-  })
+const clearMarkers = () => {
+  if (!map.value || !markerClusterGroup.value) return
 
-  map.on('moveend', () => {
-    const filtered = applyFilter(map.getBounds())
-    setVisibleItems(filtered)
-  })
-
-  map.on('locationerror', () => {
-    errorMsg('無法獲取位置，使用預設座標')
-  })
-
-  map.locate({ setView: true, maxZoom })
-
-  renderMarkers(mapData.value)
+  // 清理 cluster group 內的所有 marker
+  markerClusterGroup.value.clearLayers()
+  map.value.removeLayer(markerClusterGroup.value)
+  markerClusterGroup.value = null
 }
 
 const renderMarkers = (data) => {
-  const markers = L.markerClusterGroup()
+  if (!map.value || !Array.isArray(data)) return
+
+  // 清理舊的 markers
+  clearMarkers()
+
+  // 創建新的 cluster group
+  markerClusterGroup.value = markRaw(L.markerClusterGroup())
 
   data.forEach((item) => {
     const marker = L.marker([item.lat, item.long], {
-      icon: setIcon(item.type),
+      icon: getIcon(item.type),
     })
     marker.on('click', () => openModal('postcard', item))
-    markers.addLayer(marker)
+    markerClusterGroup.value.addLayer(marker)
   })
 
-  map.addLayer(markers)
+  map.value.addLayer(markerClusterGroup.value)
+}
+
+const moveToSearchLocation = (location, viewport) => {
+  if (!map.value) return
+
+  if (viewport?.northeast && viewport?.southwest) {
+    const bounds = L.latLngBounds(
+      [viewport.southwest.lat, viewport.southwest.lng],
+      [viewport.northeast.lat, viewport.northeast.lng],
+    )
+    map.value.fitBounds(bounds, { padding: [50, 50], animate: true })
+  } else {
+    map.value.setView([location.lat, location.lng], 15, { animate: true })
+  }
+}
+
+const postcardTypeSocket = (socketData) => {
+  if (socketData.method === 'update') {
+    updateFeature(socketData.data)
+  } else {
+    removeFeature(socketData.data.id)
+  }
+}
+
+const locationSocket = (socketData) => {
+  const { method, data } = socketData
+
+  switch (method) {
+    case 'create':
+      addLocation(data)
+      break
+    case 'update':
+      if (!data) return
+      updateLocation(data.id, data)
+      break
+    case 'delete':
+      removeLocation(data.id)
+      break
+    default:
+      errorMsg(`未知的方法: ${method}`)
+      return
+  }
+
+  // 重新套用篩選並更新地圖顯示
+  if (map.value) {
+    const bounds = map.value.getBounds()
+    const filtered = applyFilter(bounds)
+    setVisibleItems(filtered)
+  }
+}
+
+const initMap = () => {
+  try {
+    map.value = markRaw(
+      L.map('map', {
+        doubleClickZoom: false,
+        zoomControl: false,
+        minZoom: mapConfig.minZoom,
+        maxZoom: mapConfig.maxZoom,
+        maxBounds: mapConfig.maxBounds,
+        maxBoundsViscosity: mapConfig.maxBoundsViscosity,
+        worldCopyJump: true,
+      }).setView(mapConfig.defaultCenter, zoomLevel.value),
+    )
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: mapConfig.maxZoom,
+    }).addTo(map.value)
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map.value)
+
+    map.value.on('moveend', handleMoveEnd)
+    map.value.on('locationfound', handleLocationFound)
+    map.value.on('locationerror', handleLocationError)
+
+    // 初始定位
+    map.value.locate({ setView: true, maxZoom: 16 })
+  } catch (error) {
+    console.error('地圖初始化失敗:', error)
+    errorMsg('地圖載入失敗，請重新整理頁面')
+  }
+}
+
+const cleanupMap = () => {
+  // 清理位置標記
+  if (locationMarker.value) {
+    locationMarker.value.remove()
+    locationMarker.value = null
+  }
+
+  // 清理 marker cluster
+  clearMarkers()
+
+  // 清理地圖
+  if (map.value) {
+    map.value.off('moveend', handleMoveEnd)
+    map.value.off('locationfound', handleLocationFound)
+    map.value.off('locationerror', handleLocationError)
+    map.value.remove()
+    map.value = null
+  }
 }
 
 watch(
   () => mapData.value,
   (newData) => {
-    if (!map) return
-
-    map.eachLayer((layer) => {
-      if (layer instanceof L.MarkerClusterGroup) {
-        map.removeLayer(layer)
-      }
-    })
-
+    if (!map.value) return
     renderMarkers(newData)
   },
 )
@@ -168,69 +298,24 @@ watch(
 watch(
   () => searchResults.value,
   (newData) => {
-    if (!map || !newData?.result?.place_id) return
+    if (!map.value || !newData?.result?.place_id) return
 
     const { location, viewport } = newData.result
     moveToSearchLocation(location, viewport)
   },
 )
 
-const moveToSearchLocation = (location, viewport) => {
-  if (viewport?.northeast && viewport?.southwest) {
-    const bounds = L.latLngBounds(
-      [viewport.southwest.lat, viewport.southwest.lng],
-      [viewport.northeast.lat, viewport.northeast.lng],
-    )
-    map.fitBounds(bounds, { padding: [50, 50], animate: true })
-  } else {
-    map.setView([location.lat, location.lng], 15, { animate: true })
-  }
-}
-
 onMounted(() => {
   initMap()
-
   joinRoom('map', userData.value?.id || null)
-
-  socketOn('postcardType', (socketData) => {
-    if (socketData.method === 'update') {
-      updateFeature(socketData.data)
-    } else {
-      removeFeature(socketData.data.id)
-    }
-  })
-
-  socketOn('location', (socketData) => {
-    const { method, data } = socketData
-
-    switch (method) {
-      case 'create':
-        addLocation(data)
-        break
-      case 'update':
-        if (!data) return
-        updateLocation(data.id, data)
-        break
-      case 'delete':
-        removeLocation(data.id)
-        break
-      default:
-        errorMsg(`未知的方法: ${method}`)
-        return
-    }
-
-    // 重新套用篩選並更新地圖顯示
-    if (map) {
-      const bounds = map.getBounds()
-      const filtered = applyFilter(bounds)
-      setVisibleItems(filtered)
-    }
-  })
+  socketOn('postcardType', postcardTypeSocket)
+  socketOn('location', locationSocket)
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   socketOff('location')
   socketOff('postcardType')
+  cleanupMap()
 })
 </script>
 
