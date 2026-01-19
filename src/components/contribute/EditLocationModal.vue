@@ -5,7 +5,7 @@ import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
-import axios from '@/plugins/axios'
+import { locationApi } from '@/services'
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
@@ -171,7 +171,7 @@ const handleEditLocation = async () => {
   modalLoading.value = true
 
   try {
-    const res = await axios.put(`/user/locations/${apiData.id}`, formData)
+    const res = await locationApi.updateLocation(apiData.id, formData)
     await fetchUserData()
     successMsg(res?.data?.message || '更新成功')
     closeModal('editLocation')

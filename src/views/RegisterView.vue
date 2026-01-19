@@ -1,7 +1,7 @@
 <script setup>
 import { ref, useTemplateRef, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from '@/plugins/axios'
+import { authApi } from '@/services'
 import AuthFooterTip from '@/components/AuthFooterTip.vue'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
@@ -71,7 +71,7 @@ const register = async () => {
 
     loading.value = true
 
-    const res = await axios.post('/user/register', {
+    const res = await authApi.userRegister({
       name: registerData.value.name,
       account: registerData.value.account,
       password: registerData.value.password,

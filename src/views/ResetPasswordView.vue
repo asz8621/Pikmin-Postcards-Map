@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import axios from '@/plugins/axios'
+import { authApi } from '@/services'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import { useApiError } from '@/composables/useApiError'
@@ -67,7 +67,7 @@ const resetPassword = async () => {
 
     loading.value = true
 
-    const res = await axios.post('/user/reset-forgot-password', {
+    const res = await authApi.resetForgotPassword({
       token: token.value,
       email: email.value,
       account: account.value,

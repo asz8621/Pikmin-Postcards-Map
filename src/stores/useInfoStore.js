@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import axios from '@/plugins/axios'
+import { userApi } from '@/services'
 
 export const useInfoStore = defineStore('info', () => {
   const userData = ref(null)
@@ -9,7 +9,7 @@ export const useInfoStore = defineStore('info', () => {
 
   const fetchUserData = async () => {
     try {
-      const res = await axios.get('/user/info')
+      const res = await userApi.getUserInfo()
       const { user, types, locations } = res.data.data
       userData.value = user
       features.value = types

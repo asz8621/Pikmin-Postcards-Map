@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import { useApiError } from '@/composables/useApiError'
-import axios from '@/plugins/axios'
+import { authApi } from '@/services'
 
 const { handleError } = useApiError()
 
@@ -51,7 +51,7 @@ onMounted(() => {
 
 const checkToken = async () => {
   try {
-    await axios.get('/auth/check')
+    await authApi.checkUserToken()
     successMsg('登入成功')
     router.push('/map')
   } catch (err) {

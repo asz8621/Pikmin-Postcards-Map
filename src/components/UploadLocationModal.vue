@@ -4,7 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { successMsg, errorMsg } from '@/utils/appMessage'
-import axios from '@/plugins/axios'
+import { locationApi } from '@/services'
 
 const infoStore = useInfoStore()
 const { fetchUserData } = infoStore
@@ -230,9 +230,7 @@ const handleUploadLocation = async () => {
   modalLoading.value = true
 
   try {
-    const res = await axios.post('/user/locations', formData, {
-      timeout: 30000,
-    })
+    const res = await locationApi.createLocation(formData, { timeout: 30000 })
     successMsg(res.data.message)
     closeModal('uploadLocation')
     await fetchUserData()

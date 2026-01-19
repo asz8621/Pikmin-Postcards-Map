@@ -2,7 +2,7 @@
 import { onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
-import axios from '@/plugins/axios'
+import { authApi } from '@/services'
 import { useSocketStore } from '@/stores/useSocketStore'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
@@ -38,7 +38,7 @@ const login = async () => {
     loading.value = true
     formLoading.value = true
 
-    const res = await axios.post('/user/login', {
+    const res = await authApi.userLogin({
       account: loginData.value.account,
       password: loginData.value.password,
     })

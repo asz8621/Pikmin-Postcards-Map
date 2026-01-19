@@ -5,7 +5,7 @@ import { useModalStore } from '@/stores/useModalStore'
 import { useAuthFlow } from '@/composables/useAuthFlow'
 import { useApiError } from '@/composables/useApiError'
 import { successMsg } from '@/utils/appMessage'
-import axios from '@/plugins/axios'
+import { authApi } from '@/services'
 
 const { signOut } = useAuthFlow()
 const { handleError } = useApiError()
@@ -67,7 +67,7 @@ const handleSelect = async (key) => {
 // 登出
 const handleLogout = async () => {
   try {
-    const res = await axios.post('/user/logout')
+    const res = await authApi.userLogout()
     successMsg(res.data.message)
   } catch (err) {
     handleError(err, '操作異常，請稍後再試')

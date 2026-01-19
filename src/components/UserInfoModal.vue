@@ -5,7 +5,7 @@ import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
-import axios from '@/plugins/axios'
+import { userApi } from '@/services'
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
@@ -62,7 +62,7 @@ const handleUpdateUserInfo = async () => {
   modalLoading.value = true
 
   try {
-    const res = await axios.put(`/user/update/${id}`, userInfoForm.value)
+    const res = await userApi.updateUserInfo(id, userInfoForm.value)
     const { data } = res.data
     setUserData(data)
 

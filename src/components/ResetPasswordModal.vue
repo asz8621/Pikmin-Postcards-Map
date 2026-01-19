@@ -6,7 +6,7 @@ import { useModalStore } from '@/stores/useModalStore'
 import { useAuthFlow } from '@/composables/useAuthFlow'
 import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
-import axios from '@/plugins/axios'
+import { userApi } from '@/services'
 
 const { signOut } = useAuthFlow()
 const { handleError } = useApiError()
@@ -49,7 +49,7 @@ const handleResetPassword = async () => {
   modalLoading.value = true
 
   try {
-    const res = await axios.put(`/user/reset-password/${id}`, passwordForm.value)
+    const res = await userApi.resetPassword(id, passwordForm.value)
     successMsg(res.data.message || '修改成功')
     closeModal('resetPassword')
     signOut()

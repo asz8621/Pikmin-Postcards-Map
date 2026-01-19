@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import axios from '@/plugins/axios'
+import { locationApi } from '@/services'
 
 export const useMapStore = defineStore('map', () => {
   const mapAllData = ref([])
@@ -31,7 +31,7 @@ export const useMapStore = defineStore('map', () => {
 
   const fetchMapData = async () => {
     try {
-      const res = await axios.get('/user/locations')
+      const res = await locationApi.getLocations()
       mapAllData.value = res.data.data
     } catch (error) {
       return Promise.reject(error)
@@ -66,7 +66,7 @@ export const useMapStore = defineStore('map', () => {
     try {
       isSearch.value = true
       const encodedAddress = encodeURIComponent(address.trim())
-      const res = await axios.get(`/user/geocoding/search?address=${encodedAddress}`)
+      const res = await locationApi.searchAddress(encodedAddress)
       searchResults.value = res.data.data
     } catch (error) {
       return Promise.reject(error)

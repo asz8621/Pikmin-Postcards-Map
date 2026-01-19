@@ -4,7 +4,7 @@ import { useModalStore } from '@/stores/useModalStore'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
-import axios from '@/plugins/axios'
+import { locationApi } from '@/services'
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
@@ -31,7 +31,7 @@ const handleDeleteLocation = async () => {
   modalLoading.value = true
 
   try {
-    const res = await axios.delete(`/user/locations/${modalData.value.id}`)
+    const res = await locationApi.deleteLocation(modalData.value.id)
     await fetchUserData()
     successMsg(res?.message || '刪除成功')
     closeModal('deleteLocation')
