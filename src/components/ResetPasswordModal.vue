@@ -1,10 +1,11 @@
 <script setup>
-import { ref, useTemplateRef, watch, nextTick } from 'vue'
+import { ref, useTemplateRef, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useAuthFlow } from '@/composables/useAuthFlow'
 import { useApiError } from '@/composables/useApiError'
+import { usePasswordValidation } from '@/composables/usePasswordValidation'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import { userApi } from '@/services'
 
@@ -22,41 +23,16 @@ const passwordFormRef = useTemplateRef('passwordFormRef')
 const passwordForm = ref({
   passwordOld: null,
   password: null,
-  passwordConfirm: null,
+  confirmPassword: null,
 })
 
-const passwordRules = {
-  passwordOld: [{ required: true, message: '請輸入舊密碼', trigger: 'blur' }],
-  password: [
-    { required: true, message: '請輸入新密碼', trigger: 'blur' },
-    { min: 8, message: '密碼長度至少 8 個字符', trigger: 'blur' },
-    {
-      validator: (rule, value) => {
-        if (!value) return true
-        const hasLetter = /[a-zA-Z]/.test(value)
-        const hasNumber = /\d/.test(value)
-        return hasLetter && hasNumber
-      },
-      message: '密碼必須至少包含字母與數字',
-      trigger: 'blur',
-    },
-  ],
-  passwordConfirm: [
-    {
-      required: true,
-      message: '請輸入確認新密碼',
-      trigger: ['input', 'blur'],
-    },
-    {
-      key: 'passwordConfirm',
-      validator: (rule, value) => {
-        if (!value) return true
-        return value === passwordForm.value.password
-      },
-      message: '兩次輸入的密碼不一致',
-      trigger: ['input', 'blur'],
-    },
-  ],
+const { oldPasswordRules, passwordRules, confirmPasswordRules, passwordWatch } =
+  usePasswordValidation(passwordFormRef)
+
+const formRules = {
+  ...oldPasswordRules(),
+  ...passwordRules(),
+  ...confirmPasswordRules(passwordForm.value),
 }
 
 const handleResetPassword = async () => {
@@ -93,16 +69,7 @@ const handleResetPassword = async () => {
   }
 }
 
-// 驗證確認密碼欄位
-const validateConfirmPassword = async () => {
-  if (!passwordForm.value.passwordConfirm) return
-
-  await nextTick()
-  passwordFormRef.value?.validate(null, (rule) => rule?.key === 'passwordConfirm').catch(() => {})
-}
-
-// 監聽新密碼變化，自動驗證確認密碼
-watch(() => passwordForm.value.password, validateConfirmPassword)
+passwordWatch(passwordForm.value)
 
 // 關閉清除資料
 watch(
@@ -112,7 +79,7 @@ watch(
       Object.assign(passwordForm.value, {
         passwordOld: null,
         password: null,
-        passwordConfirm: null,
+        confirmPassword: null,
       })
       passwordFormRef.value?.restoreValidation()
     }
@@ -131,7 +98,7 @@ watch(
     <n-form
       ref="passwordFormRef"
       :model="passwordForm"
-      :rules="passwordRules"
+      :rules="formRules"
       :show-require-mark="false"
       :disabled="modalLoading"
       @keydown.enter.prevent="handleResetPassword"
@@ -152,9 +119,9 @@ watch(
           show-password-on="click"
         />
       </n-form-item>
-      <n-form-item label="確認新密碼" path="passwordConfirm">
+      <n-form-item label="確認新密碼" path="confirmPassword">
         <n-input
-          v-model:value="passwordForm.passwordConfirm"
+          v-model:value="passwordForm.confirmPassword"
           type="password"
           placeholder="請再次輸入新密碼"
           show-password-on="click"
@@ -185,4 +152,4 @@ watch(
   </n-modal>
 </template>
 
-<style lang="scss"></style>
+<style lang="scss" scoped></style>

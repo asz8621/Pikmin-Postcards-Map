@@ -1,10 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, useTemplateRef, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { authApi } from '@/services'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import { useApiError } from '@/composables/useApiError'
+import { usePasswordValidation } from '@/composables/usePasswordValidation'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 
 const router = useRouter()
@@ -18,48 +19,21 @@ const resetData = ref({
 })
 
 const loading = ref(false)
-const resetFormRef = ref(null)
+const resetFormRef = useTemplateRef('resetFormRef')
 
 // 從 URL 參數獲取 token, email, account
 const token = ref('')
 const email = ref('')
 const account = ref('')
 
-const validatePasswordStartWith = (rule, value) => {
-  return (
-    !!resetData.value.password &&
-    resetData.value.password.startsWith(value) &&
-    resetData.value.password.length >= value.length
-  )
-}
-
-const validatePasswordSame = (rule, value) => {
-  return value === resetData.value.password
-}
+const { passwordRules, confirmPasswordRules, passwordWatch } = usePasswordValidation(resetFormRef)
 
 const rules = {
-  password: [
-    { required: true, message: '請輸入新密碼', trigger: 'blur' },
-    { min: 6, message: '密碼長度至少為 6 個字元', trigger: 'blur' },
-  ],
-  confirmPassword: [
-    {
-      required: true,
-      message: '請再次輸入密碼',
-      trigger: ['input', 'blur'],
-    },
-    {
-      validator: validatePasswordStartWith,
-      message: '兩次密碼輸入不一致',
-      trigger: 'input',
-    },
-    {
-      validator: validatePasswordSame,
-      message: '兩次密碼輸入不一致',
-      trigger: ['blur', 'password-input'],
-    },
-  ],
+  ...passwordRules(),
+  ...confirmPasswordRules(resetData.value),
 }
+
+passwordWatch(resetData.value)
 
 const resetPassword = async () => {
   try {
@@ -81,12 +55,6 @@ const resetPassword = async () => {
     handleError(err, '重設密碼失敗，請聯絡管理員')
   } finally {
     loading.value = false
-  }
-}
-
-const handlePasswordInput = () => {
-  if (resetData.value.confirmPassword) {
-    resetFormRef.value?.validate('confirmPassword')
   }
 }
 
@@ -141,7 +109,6 @@ onMounted(() => {
         placeholder="請輸入新密碼"
         icon="key"
         show-password-on="click"
-        @input="handlePasswordInput"
       />
 
       <FormInput
