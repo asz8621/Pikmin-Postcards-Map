@@ -3,7 +3,10 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
 import { successMsg, errorMsg } from '@/utils/appMessage'
+import { useApiError } from '@/composables/useApiError'
 import axios from '@/plugins/axios'
+
+const { handleError } = useApiError()
 
 const router = useRouter()
 
@@ -52,7 +55,7 @@ const checkToken = async () => {
     successMsg('登入成功')
     router.push('/map')
   } catch (err) {
-    errorMsg(err.response?.data?.message || '驗證失敗，請重新登入')
+    handleError(err, '驗證失敗，請重新登入')
     router.push('/login')
   } finally {
     // 清除已使用的 state

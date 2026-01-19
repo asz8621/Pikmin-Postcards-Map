@@ -3,10 +3,12 @@ import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useAuthFlow } from '@/composables/useAuthFlow'
-import { successMsg, errorMsg } from '@/utils/appMessage'
+import { useApiError } from '@/composables/useApiError'
+import { successMsg } from '@/utils/appMessage'
 import axios from '@/plugins/axios'
 
 const { signOut } = useAuthFlow()
+const { handleError } = useApiError()
 
 const infoStore = useInfoStore()
 const { userData } = storeToRefs(infoStore)
@@ -68,7 +70,7 @@ const handleLogout = async () => {
     const res = await axios.post('/user/logout')
     successMsg(res.data.message)
   } catch (err) {
-    errorMsg(err.response?.data?.message || '操作失敗')
+    handleError(err, '操作異常，請稍後再試')
   } finally {
     signOut()
   }

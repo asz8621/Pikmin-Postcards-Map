@@ -3,6 +3,7 @@ import { ref, watch, useTemplateRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
+import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import axios from '@/plugins/axios'
 
@@ -13,6 +14,8 @@ const { modalStates, modalLoading, validateErrorMsg } = storeToRefs(modalStore)
 const infoStore = useInfoStore()
 const { setUserData } = infoStore
 const { userData } = storeToRefs(infoStore)
+
+const { handleError } = useApiError()
 
 const userInfoFormRef = useTemplateRef('userInfoFormRef')
 const userInfoForm = ref({
@@ -66,7 +69,7 @@ const handleUpdateUserInfo = async () => {
     successMsg(res?.data?.message || '修改成功')
     closeModal('userInfo')
   } catch (err) {
-    errorMsg(err.response?.data?.message || '修改失敗')
+    handleError(err, '修改失敗，請稍後再試')
   } finally {
     modalLoading.value = false
   }

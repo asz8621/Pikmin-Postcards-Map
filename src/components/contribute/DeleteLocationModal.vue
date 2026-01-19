@@ -2,6 +2,7 @@
 import { storeToRefs } from 'pinia'
 import { useModalStore } from '@/stores/useModalStore'
 import { useInfoStore } from '@/stores/useInfoStore'
+import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import axios from '@/plugins/axios'
 
@@ -11,6 +12,8 @@ const { modalStates, modalData, modalLoading } = storeToRefs(modalStore)
 
 const infoStore = useInfoStore()
 const { fetchUserData } = infoStore
+
+const { handleError } = useApiError()
 
 const handleDeleteLocation = async () => {
   if (modalLoading.value) return
@@ -33,7 +36,7 @@ const handleDeleteLocation = async () => {
     successMsg(res?.message || '刪除成功')
     closeModal('deleteLocation')
   } catch (err) {
-    errorMsg(err.response?.data?.message || '刪除失敗')
+    handleError(err, '刪除失敗，請稍後再試')
   } finally {
     modalLoading.value = false
   }

@@ -4,10 +4,13 @@ import { useRouter, useRoute } from 'vue-router'
 import axios from '@/plugins/axios'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
+import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 
 const router = useRouter()
 const route = useRoute()
+
+const { handleError } = useApiError()
 
 const resetData = ref({
   password: '',
@@ -75,14 +78,7 @@ const resetPassword = async () => {
 
     router.push('/login')
   } catch (err) {
-    // 表單驗證錯誤不顯示錯誤訊息
-    if (typeof err === 'object' && Array.isArray(err)) return
-
-    if (err.response?.data?.message) {
-      errorMsg(err.response.data.message)
-    } else {
-      errorMsg('重設密碼失敗，請聯絡管理員')
-    }
+    handleError(err, '重設密碼失敗，請聯絡管理員')
   } finally {
     loading.value = false
   }

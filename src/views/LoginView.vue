@@ -7,12 +7,15 @@ import { useSocketStore } from '@/stores/useSocketStore'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import SocialLogin from '@/components/SocialLogin.vue'
+import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 
 const socketStore = useSocketStore()
 const { joinRoom } = socketStore
 
 const router = useRouter()
+
+const { handleError } = useApiError()
 
 const loginData = ref({
   account: '',
@@ -49,11 +52,7 @@ const login = async () => {
       errorMsg('登入失敗：無法驗證用戶')
     }
   } catch (err) {
-    // 表單驗證錯誤不顯示錯誤訊息
-    if (typeof err === 'object' && Array.isArray(err)) return
-
-    const message = err.response?.data?.message || '登入錯誤，請聯絡管理員'
-    errorMsg(message)
+    handleError(err, '登入錯誤，請聯絡管理員')
   } finally {
     loading.value = false
     formLoading.value = false

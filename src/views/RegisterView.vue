@@ -5,13 +5,16 @@ import axios from '@/plugins/axios'
 import AuthFooterTip from '@/components/AuthFooterTip.vue'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
+import { useApiError } from '@/composables/useApiError'
 import { useSocketStore } from '@/stores/useSocketStore'
-import { successMsg, errorMsg } from '@/utils/appMessage'
+import { successMsg } from '@/utils/appMessage'
 
 const router = useRouter()
 
 const socketStore = useSocketStore()
 const { joinRoom } = socketStore
+
+const { handleError } = useApiError()
 
 const registerData = ref({
   name: '',
@@ -78,20 +81,7 @@ const register = async () => {
     successMsg(res.data.message || '註冊成功！請登入')
     router.push('/login')
   } catch (err) {
-    // 表單驗證錯誤不顯示錯誤訊息
-    if (typeof err === 'object' && Array.isArray(err)) return
-
-    if (err.response?.data?.message) {
-      const msg = err.response.data.message
-      if (Array.isArray(msg)) {
-        // 多筆逐一顯示
-        msg.forEach((errorMessage) => errorMsg(errorMessage))
-      } else {
-        errorMsg(msg)
-      }
-    } else {
-      errorMsg('註冊失敗，請聯絡管理員')
-    }
+    handleError(err, '註冊失敗，請聯絡管理員')
   } finally {
     loading.value = false
   }

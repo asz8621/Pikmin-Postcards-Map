@@ -5,9 +5,12 @@ import axios from '@/plugins/axios'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import AuthFooterTip from '@/components/AuthFooterTip.vue'
-import { successMsg, errorMsg } from '@/utils/appMessage'
+import { useApiError } from '@/composables/useApiError'
+import { successMsg } from '@/utils/appMessage'
 
 const router = useRouter()
+
+const { handleError } = useApiError()
 
 const forgotData = ref({
   account: '',
@@ -43,14 +46,7 @@ const sendResetEmail = async () => {
 
     router.push('/login')
   } catch (err) {
-    // 表單驗證錯誤不顯示錯誤訊息
-    if (typeof err === 'object' && Array.isArray(err)) return
-
-    if (err.response?.data?.message) {
-      errorMsg(err.response.data.message)
-    } else {
-      errorMsg('發送失敗，請聯絡管理員')
-    }
+    handleError(err, '發送失敗，請聯絡管理員')
   } finally {
     loading.value = false
   }

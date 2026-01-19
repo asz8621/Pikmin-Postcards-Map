@@ -4,10 +4,12 @@ import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useAuthFlow } from '@/composables/useAuthFlow'
+import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import axios from '@/plugins/axios'
 
 const { signOut } = useAuthFlow()
+const { handleError } = useApiError()
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
@@ -52,12 +54,7 @@ const handleResetPassword = async () => {
     closeModal('resetPassword')
     signOut()
   } catch (err) {
-    const errorMessage = err.response?.data?.message
-    if (Array.isArray(errorMessage)) {
-      errorMessage.forEach((msg) => errorMsg(msg))
-    } else {
-      errorMsg(errorMessage || '操作失敗')
-    }
+    handleError(err, '修改失敗，請稍後再試')
   } finally {
     modalLoading.value = false
   }

@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
+import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import axios from '@/plugins/axios'
 
@@ -12,6 +13,8 @@ const { modalStates, modalData, modalLoading, validateErrorMsg } = storeToRefs(m
 
 const infoStore = useInfoStore()
 const { fetchUserData } = infoStore
+
+const { handleError } = useApiError()
 
 const editLocationRef = ref(null)
 const locationFormData = ref({})
@@ -173,7 +176,7 @@ const handleEditLocation = async () => {
     successMsg(res?.data?.message || '更新成功')
     closeModal('editLocation')
   } catch (err) {
-    errorMsg(err.response?.data?.message || '更新失敗')
+    handleError(err, '更新失敗，請稍後再試')
   } finally {
     modalLoading.value = false
   }
