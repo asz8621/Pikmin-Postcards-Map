@@ -1,123 +1,40 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, useTemplateRef, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
+import { useFileUpload } from '@/composables/useFileUpload'
+import { useCoordinates } from '@/composables/useCoordinates'
+import { useLocationForm } from '@/composables/useLocationForm'
 import { locationApi } from '@/services'
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
-const { modalStates, modalData, modalLoading, validateErrorMsg } = storeToRefs(modalStore)
+const { modalStates, modalData, modalLoading } = storeToRefs(modalStore)
 
 const infoStore = useInfoStore()
 const { fetchUserData } = infoStore
 
 const { handleError } = useApiError()
 
-const editLocationRef = ref(null)
+const { imageFileRules, beforeUpload, buildFormData } = useFileUpload()
+const { coordsRules, getCoordinates } = useCoordinates()
+const { typeOptions, typeChange, typeRules } = useLocationForm()
+
+const editLocationRef = useTemplateRef('editLocationRef')
 const locationFormData = ref({})
-const maxSizeMB = 5
-const maxSizeBytes = maxSizeMB * 1024 * 1024
-const allowedTypes = ['image/png', 'image/jpeg']
-const typeOptions = [
-  { label: '花', value: 'flower' },
-  { label: '蘑菇', value: 'mushroom' },
-]
 
 const rules = {
-  imageFile: [
-    {
-      key: 'imageFile',
-      required: true,
-      validator: (_, value) => {
-        const result = validateImageFile(value)
-        return result
-      },
-      trigger: ['change', 'blur'],
-    },
-  ],
-  type: [{ required: true, message: '請選擇類型', trigger: 'blur' }],
-  coords: [
-    {
-      validator: (_, value) => {
-        if (!value || value.trim() === '') {
-          return new Error('請輸入座標')
-        }
-
-        const coordRegex = /^\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*$/
-        const match = value?.match(coordRegex)
-
-        if (!match) {
-          return new Error('座標格式錯誤，請輸入例如：2.3425245, 34.23523552')
-        }
-
-        const lat = parseFloat(match[1])
-        const long = parseFloat(match[3])
-
-        if (lat < -90 || lat > 90 || long < -180 || long > 180) {
-          return new Error('經緯度超出合理範圍 (緯度 -90~90, 經度 -180~180)')
-        }
-
-        return true
-      },
-      trigger: 'blur',
-    },
-  ],
+  ...imageFileRules(),
+  ...typeRules(),
+  ...coordsRules(),
 }
 
 const submitText = computed(() => {
   return locationFormData.value.image_status === 'rejected' ? '重新送審' : '送出'
 })
-
-// 蘑菇禁止修改隱藏版
-const changeType = (type) => {
-  if (type === 'mushroom') locationFormData.value.explore = false
-}
-
-// 檢查檔案格式
-const validateImageFile = (file) => {
-  // 沒重新上傳不驗證
-  if (!file && locationFormData.value.image) return true
-
-  const fileSize = file.size
-  const fileType = file.type
-  const fileName = file.name
-  if (!fileName || !fileSize || !fileType) {
-    return new Error('檔案資訊錯誤')
-  }
-
-  if (!allowedTypes.includes(fileType)) {
-    return new Error('只能上傳 PNG 或 JPG 圖片')
-  }
-
-  if (fileSize > maxSizeBytes) {
-    return new Error(`圖片大小不可超過 ${maxSizeMB}MB`)
-  }
-
-  return true
-}
-
-// 檢查上傳檔案
-const beforeUpload = (uploadData) => {
-  const file = uploadData.file.file
-  const fileData = {
-    file,
-    name: file.name,
-    size: file.size,
-    type: file.type,
-  }
-
-  const result = validateImageFile(fileData)
-
-  if (result instanceof Error) {
-    errorMsg(result.message)
-    return false
-  }
-
-  return true
-}
 
 // 暫存圖片到表單資料
 const customUpload = ({ file, onFinish }) => {
@@ -130,13 +47,9 @@ const handleRemove = () => {
   locationFormData.value.imageFile = null
 }
 
-// 取得經緯度
-const getCoordinates = (input) => {
-  const [latStr, longStr] = input.split(',')
-  const lat = parseFloat(latStr.trim())
-  const long = parseFloat(longStr.trim())
-
-  return { lat, long }
+// 蘑菇禁止修改隱藏版
+const updateType = (type) => {
+  typeChange(locationFormData.value, type)
 }
 
 const handleEditLocation = async () => {
@@ -145,7 +58,6 @@ const handleEditLocation = async () => {
   try {
     await editLocationRef.value?.validate()
   } catch {
-    errorMsg(validateErrorMsg.value)
     return
   }
 
@@ -158,10 +70,7 @@ const handleEditLocation = async () => {
 
   if (!apiData.imageFile) delete apiData.imageFile
 
-  const formData = new FormData()
-  for (const [key, value] of Object.entries(apiData)) {
-    formData.append(key, value)
-  }
+  const formData = await buildFormData(apiData)
 
   if (apiData.id === 1) {
     errorMsg('Demo 資料無法更新，請自行新增資料後再操作')
@@ -259,7 +168,7 @@ watch(
           v-model:value="locationFormData.type"
           :options="typeOptions"
           placeholder="請選擇類型"
-          @update:value="changeType"
+          @update:value="updateType"
         />
       </n-form-item>
 

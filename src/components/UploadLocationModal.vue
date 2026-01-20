@@ -3,7 +3,11 @@ import { ref, watch, useTemplateRef, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
-import { successMsg, errorMsg } from '@/utils/appMessage'
+import { useApiError } from '@/composables/useApiError'
+import { useFileUpload } from '@/composables/useFileUpload'
+import { useCoordinates } from '@/composables/useCoordinates'
+import { useLocationForm } from '@/composables/useLocationForm'
+import { successMsg } from '@/utils/appMessage'
 import { locationApi } from '@/services'
 
 const infoStore = useInfoStore()
@@ -11,7 +15,13 @@ const { fetchUserData } = infoStore
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
-const { modalStates, modalLoading, validateErrorMsg } = storeToRefs(modalStore)
+const { modalStates, modalLoading } = storeToRefs(modalStore)
+
+const { handleError } = useApiError()
+
+const { imageFileRules, beforeUpload, buildFormData } = useFileUpload()
+const { coordsRules, getCoordinates } = useCoordinates()
+const { typeOptions, typeChange, typeRules } = useLocationForm()
 
 const uploadLocationFormRef = useTemplateRef('uploadLocationFormRef')
 const locationFormData = ref({
@@ -21,53 +31,11 @@ const locationFormData = ref({
   coords: null,
   explore: false,
 })
-const maxSizeMB = 5
-const maxSizeBytes = maxSizeMB * 1024 * 1024
-const allowedTypes = ['image/png', 'image/jpeg']
-const typeOptions = [
-  { label: '花', value: 'flower' },
-  { label: '蘑菇', value: 'mushroom' },
-]
 
 const rules = {
-  imageFile: [
-    {
-      key: 'imageFile',
-      required: true,
-      validator: (_, value) => {
-        const result = validateImageFile(value)
-        return result
-      },
-      trigger: ['change', 'blur'],
-    },
-  ],
-  type: [{ required: true, message: '請選擇類型', trigger: 'blur' }],
-  coords: [
-    {
-      validator: (_, value) => {
-        if (!value || value.trim() === '') {
-          return new Error('請輸入座標')
-        }
-
-        const coordRegex = /^\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*$/
-        const match = value?.match(coordRegex)
-
-        if (!match) {
-          return new Error('座標格式錯誤，請輸入例如：2.3425245, 34.23523552')
-        }
-
-        const lat = parseFloat(match[1])
-        const long = parseFloat(match[3])
-
-        if (lat < -90 || lat > 90 || long < -180 || long > 180) {
-          return new Error('經緯度超出合理範圍 (緯度 -90~90, 經度 -180~180)')
-        }
-
-        return true
-      },
-      trigger: 'blur',
-    },
-  ],
+  ...imageFileRules(),
+  ...typeRules(),
+  ...coordsRules(),
 }
 
 const fileListClass = computed(() => {
@@ -86,44 +54,8 @@ const resetLocationFormData = () => {
 }
 
 // 蘑菇禁止修改隱藏版
-const changeType = (type) => {
-  if (type === 'mushroom') locationFormData.value.explore = false
-}
-
-// 檢查檔案格式
-const validateImageFile = (file) => {
-  if (!file) return new Error('請上傳圖片')
-
-  const fileSize = file.size
-  const fileType = file.type
-  const fileName = file.name
-  if (!fileName || !fileType) return new Error('檔案資訊錯誤')
-
-  if (!allowedTypes.includes(fileType)) return new Error('只能上傳 PNG 或 JPG 圖片')
-
-  if (fileSize > maxSizeBytes) return new Error(`圖片大小不可超過 ${maxSizeMB}MB`)
-
-  return true
-}
-
-// 檢查上傳檔案
-const beforeUpload = (uploadData) => {
-  const file = uploadData.file.file
-  const fileData = {
-    file,
-    name: file.name,
-    size: file.size,
-    type: file.type,
-  }
-
-  const result = validateImageFile(fileData, 'beforeUpload')
-
-  if (result instanceof Error) {
-    errorMsg(result.message)
-    return false
-  }
-
-  return true
+const updateType = (type) => {
+  typeChange(locationFormData.value, type)
 }
 
 // 暫存圖片到表單資料
@@ -139,74 +71,12 @@ const handleRemove = () => {
   uploadLocationFormRef.value?.validate(null, (rule) => rule?.key === 'imageFile').catch(() => {})
 }
 
-// 縮放並轉換圖片為 JPG
-const resizeAndConvertToJPG = (file) => {
-  const maxSize = 1500
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    const reader = new FileReader()
-
-    reader.onload = () => {
-      img.src = reader.result
-    }
-
-    img.onload = () => {
-      let { width, height } = img
-
-      // 計算等比例縮放
-      if (width > maxSize || height > maxSize) {
-        const scale = Math.min(maxSize / width, maxSize / height)
-        width = width * scale
-        height = height * scale
-      }
-
-      const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
-
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return reject('無法取得畫布上下文')
-
-      // 背景改白色（防止 PNG 透明變黑）
-      ctx.fillStyle = 'white'
-      ctx.fillRect(0, 0, width, height)
-
-      ctx.drawImage(img, 0, 0, width, height)
-
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) return reject('轉換失敗')
-          const newFile = new File([blob], file.name.replace(/\.\w+$/, '.jpg'), {
-            type: 'image/jpeg',
-          })
-          resolve(newFile)
-        },
-        'image/jpeg',
-        // 0.85, // 壓縮品質，可依需求調整
-      )
-    }
-
-    reader.onerror = (err) => reject(err)
-    reader.readAsDataURL(file)
-  })
-}
-
-// 取得經緯度
-const getCoordinates = (input) => {
-  const [latStr, longStr] = input.split(',')
-  const lat = parseFloat(latStr.trim())
-  const long = parseFloat(longStr.trim())
-
-  return { lat, long }
-}
-
 const handleUploadLocation = async () => {
   if (modalLoading.value) return
 
   try {
     await uploadLocationFormRef.value?.validate()
   } catch {
-    errorMsg(validateErrorMsg.value)
     return
   }
 
@@ -217,30 +87,17 @@ const handleUploadLocation = async () => {
   const apiData = { ...locationFormData.value }
   delete apiData.coords
 
-  const formData = new FormData()
-  for (const [key, value] of Object.entries(apiData)) {
-    if (key === 'imageFile' && value) {
-      const compressedFile = await resizeAndConvertToJPG(value)
-      formData.append('imageFile', compressedFile)
-    } else {
-      formData.append(key, value)
-    }
-  }
+  const formData = await buildFormData(apiData)
 
   modalLoading.value = true
 
   try {
     const res = await locationApi.createLocation(formData, { timeout: 30000 })
-    successMsg(res.data.message)
+    successMsg(res.data.message || '上傳成功')
     closeModal('uploadLocation')
     await fetchUserData()
-  } catch (error) {
-    const errorMessage = error.response?.data?.message || error.message || '操作失敗'
-    if (Array.isArray(errorMessage)) {
-      errorMessage.forEach((msg) => errorMsg(msg))
-    } else {
-      errorMsg(errorMessage)
-    }
+  } catch (err) {
+    handleError(err, '上傳失敗，請稍後再試')
   } finally {
     modalLoading.value = false
   }
@@ -309,7 +166,7 @@ watch(
           v-model:value="locationFormData.type"
           :options="typeOptions"
           placeholder="請選擇類型"
-          @update:value="changeType"
+          @update:value="updateType"
         />
       </n-form-item>
 
