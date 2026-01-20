@@ -12,13 +12,13 @@ export const useFileUpload = (options = {}) => {
   const maxSizeBytes = maxSizeMB * 1024 * 1024
 
   // 圖片驗證規則
-  const imageFileRules = () => ({
+  const imageFileRules = (imageUrl) => ({
     imageFile: [
       {
         key: 'imageFile',
         required: true,
         validator: (_, value) => {
-          const result = validateImageFile(value)
+          const result = validateImageFile(value, imageUrl)
           return result
         },
         trigger: ['change', 'blur'],
@@ -27,7 +27,9 @@ export const useFileUpload = (options = {}) => {
   })
 
   // 檢查檔案格式與大小
-  const validateImageFile = (file) => {
+  const validateImageFile = (file, imageUrl) => {
+    if (!file && imageUrl) return true // 沒重新上傳不驗證(編輯用)
+
     if (!file) {
       return new Error('請上傳圖片')
     }

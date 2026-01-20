@@ -26,11 +26,11 @@ const { typeOptions, typeChange, typeRules } = useLocationForm()
 const editLocationRef = useTemplateRef('editLocationRef')
 const locationFormData = ref({})
 
-const rules = {
-  ...imageFileRules(),
+const rules = computed(() => ({
+  ...imageFileRules(locationFormData.value.image),
   ...typeRules(),
   ...coordsRules(),
-}
+}))
 
 const submitText = computed(() => {
   return locationFormData.value.image_status === 'rejected' ? '重新送審' : '送出'
