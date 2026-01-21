@@ -1,4 +1,5 @@
 import { onMounted, onUnmounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useSocketStore } from '@/stores/useSocketStore'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useMapStore } from '@/stores/useMapStore'
@@ -6,10 +7,11 @@ import { errorMsg } from '@/utils/appMessage'
 
 export const useSocketEvents = () => {
   const socketStore = useSocketStore()
-  const { socketOn, socketOff, joinRoom } = socketStore
+  const { socketOn, socketOff, joinRoom, initSocket } = socketStore
 
   const infoStore = useInfoStore()
   const { updateFeature, removeFeature } = infoStore
+  const { contribute } = storeToRefs(infoStore)
 
   const mapStore = useMapStore()
   const { addLocation, updateLocation, removeLocation } = mapStore
@@ -56,10 +58,28 @@ export const useSocketEvents = () => {
     }
   }
 
+  // 使用者的貢獻處理
+  const handleUserContribute = (socketData) => {
+    const { data } = socketData
+
+    if (data.name) {
+      // 修改
+      const index = contribute.value.findIndex((item) => item.id === data.id)
+      if (index !== -1) {
+        contribute.value[index] = data
+      }
+    } else {
+      // 刪除
+      contribute.value = contribute.value.filter((item) => item.id !== data.id)
+    }
+  }
+
   return {
+    initSocket,
     joinRoom,
     useSocketListener,
     handleLocation,
     handlePostcardType,
+    handleUserContribute,
   }
 }

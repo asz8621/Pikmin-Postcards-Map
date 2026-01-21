@@ -1,15 +1,12 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModalStore } from '@/stores/useModalStore'
 import { useInfoStore } from '@/stores/useInfoStore'
 import EditLocationModal from '@/components/contribute/EditLocationModal.vue'
 import DeleteLocationModal from '@/components/contribute/DeleteLocationModal.vue'
+import { useSocketEvents } from '@/composables/useSocketEvents'
 import { getTypeIcon } from '@/utils/typeIcon'
-import { useSocketStore } from '@/stores/useSocketStore'
-
-const socketStore = useSocketStore()
-const { socketOn, socketOff } = socketStore
 
 const infoStore = useInfoStore()
 const { contribute } = storeToRefs(infoStore)
@@ -17,6 +14,10 @@ const { contribute } = storeToRefs(infoStore)
 const modalStore = useModalStore()
 const { openModal, closeModal } = modalStore
 const { modalStates } = storeToRefs(modalStore)
+
+const { useSocketListener, handleUserContribute } = useSocketEvents()
+
+useSocketListener('info', handleUserContribute)
 
 const checkStrategy = ref('all')
 const filteredContribute = computed(() => {
@@ -49,26 +50,6 @@ const onDrawerShowChange = (show) => {
     checkStrategy.value = 'all'
   }
 }
-
-onMounted(() => {
-  socketOn('info', (socketData) => {
-    const { data } = socketData
-    if (data.name) {
-      // 修改
-      const index = contribute.value.findIndex((item) => item.id === data.id)
-      if (index !== -1) {
-        contribute.value[index] = data
-      }
-    } else {
-      // 刪除
-      contribute.value = contribute.value.filter((item) => item.id !== data.id)
-    }
-  })
-})
-
-onUnmounted(() => {
-  socketOff('info')
-})
 </script>
 
 <template>

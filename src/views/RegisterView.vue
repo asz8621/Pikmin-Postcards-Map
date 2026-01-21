@@ -6,15 +6,14 @@ import AuthFooterTip from '@/components/AuthFooterTip.vue'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import { useApiError } from '@/composables/useApiError'
-import { useSocketStore } from '@/stores/useSocketStore'
+import { useSocketEvents } from '@/composables/useSocketEvents'
 import { successMsg } from '@/utils/appMessage'
 
 const router = useRouter()
 
-const socketStore = useSocketStore()
-const { joinRoom } = socketStore
-
 const { handleError } = useApiError()
+
+const { joinRoom } = useSocketEvents()
 
 const registerData = ref({
   name: '',

@@ -2,13 +2,12 @@
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLoadingStore } from '@/stores/useLoadingStore'
-import { useSocketStore } from '@/stores/useSocketStore'
+import { useSocketEvents } from '@/composables/useSocketEvents'
 
 const loadingStore = useLoadingStore()
 const { isAppLoading } = storeToRefs(loadingStore)
 
-const socketStore = useSocketStore()
-const { initSocket } = socketStore
+const { initSocket } = useSocketEvents()
 
 onMounted(() => {
   initSocket()
