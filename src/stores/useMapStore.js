@@ -1,14 +1,31 @@
-import { ref, computed } from 'vue'
+import { ref, computed, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
 import { locationApi } from '@/services'
+import L from 'leaflet'
 
 export const useMapStore = defineStore('map', () => {
+  // 地圖配置
+  const mapConfig = {
+    minZoom: 2,
+    maxZoom: 18,
+    defaultZoom: 6,
+    defaultCenter: [25.033, 121.5654],
+    maxBounds: [
+      [-85, -Infinity],
+      [85, Infinity],
+    ],
+    maxBoundsViscosity: 1.0,
+  }
+
+  const map = shallowRef(null)
+
   const mapAllData = ref([])
   const mapData = ref([])
   const typeFilter = ref(null)
   const featuresFilter = ref([])
   const searchResults = ref(null)
   const isSearch = ref(false)
+  const filterDrawer = ref(false)
 
   const isFiltered = computed(() => !!typeFilter.value || featuresFilter.value.length > 0)
 
@@ -38,10 +55,6 @@ export const useMapStore = defineStore('map', () => {
     }
   }
 
-  const setVisibleItems = (items) => {
-    mapData.value = items
-  }
-
   const applyFilter = (bounds) => {
     const hasType = !!typeFilter.value
     const hasFeature = featuresFilter.value.length > 0
@@ -62,6 +75,24 @@ export const useMapStore = defineStore('map', () => {
     return filtered
   }
 
+  // 篩選並調整地圖視野
+  const applyFilterWithView = () => {
+    if (!map.value) return []
+
+    const filtered = applyFilter(map.value.getBounds())
+
+    // 根據篩選結果調整地圖視野
+    if (isFiltered.value) {
+      // 有篩選條件：縮到最小，顯示全球
+      map.value.setZoom(mapConfig.minZoom, { animate: true })
+    } else if (filtered.length > 0) {
+      // 無篩選條件且有結果：自動調整視野以顯示所有點
+      const latLngs = filtered.map((item) => [item.lat, item.long])
+      const bounds = L.latLngBounds(latLngs)
+      map.value.fitBounds(bounds, { padding: [50, 50], animate: true })
+    }
+  }
+
   const searchAddress = async (address) => {
     try {
       isSearch.value = true
@@ -75,7 +106,15 @@ export const useMapStore = defineStore('map', () => {
     }
   }
 
+  // 刷新地圖
+  const refreshMapView = () => {
+    if (!map.value) return
+    applyFilter(map.value.getBounds())
+  }
+
   return {
+    mapConfig,
+    map,
     mapAllData,
     mapData,
     typeFilter,
@@ -83,12 +122,14 @@ export const useMapStore = defineStore('map', () => {
     isFiltered,
     searchResults,
     isSearch,
+    filterDrawer,
     searchAddress,
     applyFilter,
+    applyFilterWithView,
     fetchMapData,
-    setVisibleItems,
     addLocation,
     updateLocation,
     removeLocation,
+    refreshMapView,
   }
 })
