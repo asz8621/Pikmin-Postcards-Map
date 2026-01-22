@@ -34,11 +34,10 @@ const getIcon = (type) => mapIcons[type] || mapIcons.default
 
 // 定位選項配置
 const locateOptions = {
-  setView: true,
-  maxZoom: 16,
-  enableHighAccuracy: true,
-  timeout: 5000,
-  maximumAge: 0,
+  setView: false, // 關閉 Leaflet 自動移動視野，避免與 handleLocationFound 中的 setView 重複觸發
+  enableHighAccuracy: true, // 使用高精度定位
+  timeout: 7000, // 逾時時間 7 秒
+  maximumAge: 0, // 不使用快取位置
 }
 
 const debounce = (fn, delay) => {
@@ -119,11 +118,8 @@ export const useLeafletMap = (options = {}) => {
     locationMarker.value = L.marker(e.latlng, { icon: mapIcons.location })
     locationMarker.value.addTo(map.value).bindPopup('您的位置')
 
-    // 確保移動到使用者位置
+    // 移動到使用者位置
     map.value.setView(e.latlng, 16, { animate: true })
-
-    // 定位完成後調整地圖視野
-    applyFilterWithView()
   }
 
   // 處理定位錯誤
