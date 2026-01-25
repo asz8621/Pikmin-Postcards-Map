@@ -38,13 +38,13 @@ Promise.all([fetchUserData(), fetchMapData()])
 </script>
 
 <template>
-  <n-layout class="relative">
+  <n-layout class="relative h-full">
     <SearchBox />
 
     <UserMenu />
 
-    <n-layout-content>
-      <div class="w-full h-screen relative z-[1]">
+    <n-layout-content class="h-full">
+      <div class="relative w-full h-full z-[1]">
         <LeafletMap v-if="isDataReady" />
       </div>
 

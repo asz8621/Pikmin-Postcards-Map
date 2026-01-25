@@ -3,3 +3,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .h-screen-safe {
+    height: 100vh;
+    height: -webkit-fill-available;
+    height: 100dvh;
+    height: calc(var(--vh, 1vh) * 100);
+  }
+}

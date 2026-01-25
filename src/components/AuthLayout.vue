@@ -2,7 +2,7 @@
 
 <template>
   <div
-    class="flex justify-center items-start min-h-screen bg-login bg-center bg-no-repeat bg-cover p-4 xs:items-center"
+    class="flex justify-center items-start xs:items-center bg-login bg-center bg-no-repeat bg-cover h-full p-4"
   >
     <div class="w-full xs:w-[400px] p-6 bg-green-50/90 rounded-lg shadow-lg select-none">
       <h1 class="mb-6">

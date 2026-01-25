@@ -3,11 +3,14 @@ import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLoadingStore } from '@/stores/useLoadingStore'
 import { useSocketEvents } from '@/composables/useSocketEvents'
+import { useViewportHeight } from '@/composables/useViewportHeight'
 
 const loadingStore = useLoadingStore()
 const { isAppLoading } = storeToRefs(loadingStore)
 
 const { initSocket } = useSocketEvents()
+
+useViewportHeight()
 
 onMounted(() => {
   initSocket()
@@ -35,7 +38,9 @@ const themeOverrides = {
           <p>加載中，請稍後</p>
         </div>
 
-        <router-view />
+        <div class="h-screen-safe">
+          <router-view />
+        </div>
       </n-dialog-provider>
     </n-message-provider>
   </n-config-provider>
