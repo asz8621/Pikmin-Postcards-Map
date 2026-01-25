@@ -1,36 +1,33 @@
 <script setup>
 import { onMounted, onBeforeUnmount } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/useMapStore'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useSocketEvents } from '@/composables/useSocketEvents'
 import { useLeafletMap } from '@/composables/useLeafletMap'
 import { useMapFilter } from '@/composables/useMapFilter'
-import { useLocationForm } from '@/composables/useLocationForm'
-import { storeToRefs } from 'pinia'
+import FilterDrawer from '@/components/map/FilterDrawer.vue'
 
 const mapStore = useMapStore()
 const { isFiltered } = storeToRefs(mapStore)
 const { refreshMapView } = mapStore
 
 const infoStore = useInfoStore()
-const { features, userData } = storeToRefs(infoStore)
-
-const { typeOptions } = useLocationForm()
+const { userData } = storeToRefs(infoStore)
 
 const { handlePostcardType, handleLocation, useSocketListener, joinRoom } = useSocketEvents()
 
 const { initMap, currentLocation, cleanupMap } = useLeafletMap({ containerId: 'map' })
 
-const { typeFilter, featuresFilter, filterDrawer, openFilterDrawer, applyFilter, resetFilter } =
-  useMapFilter()
+const { openFilterDrawer } = useMapFilter()
 
 // 類型 socket 處理
-const postcardTypeSocket = (socketData) => {
+const handlePostcardTypeSocket = (socketData) => {
   handlePostcardType(socketData)
 }
 
 // 點位 socket 處理
-const locationSocket = (socketData) => {
+const handleLocationSocket = (socketData) => {
   // 資料處理
   handleLocation(socketData)
 
@@ -39,8 +36,8 @@ const locationSocket = (socketData) => {
 }
 
 // 註冊 Socket 事件監聽器
-useSocketListener('postcardType', postcardTypeSocket)
-useSocketListener('location', locationSocket)
+useSocketListener('postcardType', handlePostcardTypeSocket)
+useSocketListener('location', handleLocationSocket)
 
 onMounted(() => {
   initMap()
@@ -63,44 +60,7 @@ onBeforeUnmount(() => {
     <SvgIcon name="filter" />
   </div>
 
-  <n-drawer
-    v-model:show="filterDrawer"
-    :width="300"
-    placement="right"
-    :auto-focus="false"
-    :close-on-esc="false"
-    :mask-closable="false"
-  >
-    <n-drawer-content title="篩選明信片" closable>
-      <n-form>
-        <n-form-item path="type" label="類型">
-          <n-select
-            v-model:value="typeFilter"
-            :options="typeOptions"
-            placeholder="選擇類型"
-            clearable
-          />
-        </n-form-item>
-        <n-form-item path="features" label="標籤">
-          <n-select
-            v-model:value="featuresFilter"
-            :options="features"
-            label-field="name"
-            value-field="id"
-            multiple
-            filterable
-            clearable
-            placeholder="選擇標籤"
-          />
-        </n-form-item>
-      </n-form>
-
-      <div class="flex gap-2">
-        <n-button class="flex-1" @click="resetFilter">重置</n-button>
-        <n-button type="primary" class="flex-1" @click="applyFilter">確認</n-button>
-      </div>
-    </n-drawer-content>
-  </n-drawer>
+  <FilterDrawer />
 </template>
 
 <style lang="scss">

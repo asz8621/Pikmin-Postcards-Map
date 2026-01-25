@@ -3,7 +3,7 @@ import { useMapStore } from '@/stores/useMapStore'
 
 export const useMapFilter = () => {
   const mapStore = useMapStore()
-  const { typeFilter, featuresFilter, filterDrawer } = storeToRefs(mapStore)
+  const { typeFilter, featuresFilter, filterDrawer, isFiltered } = storeToRefs(mapStore)
   const { applyFilterWithView } = mapStore
 
   // 打開篩選抽屜
@@ -24,16 +24,18 @@ export const useMapFilter = () => {
 
   // 重置篩選
   const resetFilter = () => {
+    if (!isFiltered.value) return
+
     typeFilter.value = null
     featuresFilter.value = []
-    applyFilterWithView()
-    closeFilterDrawer()
+    applyFilter()
   }
 
   return {
     typeFilter,
     featuresFilter,
     filterDrawer,
+    isFiltered,
     openFilterDrawer,
     closeFilterDrawer,
     applyFilter,
