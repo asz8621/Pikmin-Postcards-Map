@@ -5,6 +5,7 @@ import { useLoadingStore } from '@/stores/useLoadingStore'
 import { useMapStore } from '@/stores/useMapStore'
 import { useSocketEvents } from '@/composables/useSocketEvents'
 import { useViewportHeight } from '@/composables/useViewportHeight'
+import { useRoute } from 'vue-router'
 
 const loadingStore = useLoadingStore()
 const { isAppLoading } = storeToRefs(loadingStore)
@@ -14,7 +15,15 @@ const { isLocated } = storeToRefs(mapStore)
 
 const { initSocket } = useSocketEvents()
 
-useViewportHeight()
+const route = useRoute()
+
+const isMapPage = computed(() => route.name === 'map')
+
+const showLoading = computed(() => {
+  if (isAppLoading.value) return true
+  if (isMapPage.value && !isLocated.value) return true
+  return false
+})
 
 const loadingText = computed(() => {
   if (isAppLoading.value) {
@@ -23,6 +32,8 @@ const loadingText = computed(() => {
     return '正在取得您的位置...'
   }
 })
+
+useViewportHeight()
 
 onMounted(() => {
   initSocket()
@@ -43,7 +54,7 @@ const themeOverrides = {
     <n-message-provider>
       <n-dialog-provider>
         <div
-          v-if="isAppLoading || !isLocated"
+          v-if="showLoading"
           class="fixed inset-0 z-[999] bg-white/80 flex items-center flex-col justify-center"
         >
           <img src="@/assets/images/loading.gif" alt="" width="84" />
