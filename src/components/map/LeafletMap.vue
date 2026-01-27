@@ -17,7 +17,9 @@ const { userData } = storeToRefs(infoStore)
 
 const { handlePostcardType, handleLocation, useSocketListener, joinRoom } = useSocketEvents()
 
-const { initMap, currentLocation, cleanupMap } = useLeafletMap({ containerId: 'map' })
+const { initMap, currentLocation, cleanupMap, isLocating } = useLeafletMap({
+  containerId: 'map',
+})
 
 const { openFilterDrawer } = useMapFilter()
 
@@ -50,12 +52,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div id="map"></div>
+  <div id="map" class="select-none touch-none"></div>
 
-  <div class="mapIcon locationIcon" @click="currentLocation">
+  <!-- 我的位置 Icon -->
+  <div class="mapIcon locationIcon" :class="{ locating: isLocating }" @click="currentLocation">
     <SvgIcon name="location" />
   </div>
 
+  <!-- 篩選抽屜 Icon -->
   <div class="mapIcon drawerIcon" :class="{ filtered: isFiltered }" @click="openFilterDrawer">
     <SvgIcon name="filter" />
   </div>
@@ -68,6 +72,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
 }
+
 .leaflet-bar.leaflet-control {
   margin: 0;
   position: absolute;
@@ -96,6 +101,13 @@ onBeforeUnmount(() => {
   }
   &.locationIcon {
     bottom: 180px;
+    &.locating {
+      cursor: not-allowed;
+      color: #d3a452;
+      .svg-icon {
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+    }
   }
   &.drawerIcon {
     bottom: 218px;
@@ -103,6 +115,19 @@ onBeforeUnmount(() => {
       background: #807bff;
       color: #fff;
     }
+  }
+}
+
+// 定位中的動畫
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
   }
 }
 </style>

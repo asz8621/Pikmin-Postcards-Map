@@ -36,7 +36,7 @@ const getIcon = (type) => mapIcons[type] || mapIcons.default
 const locateOptions = {
   setView: false, // 關閉 Leaflet 自動移動視野，避免與 handleLocationFound 中的 setView 重複觸發
   enableHighAccuracy: true, // 使用高精度定位
-  timeout: 7000, // 逾時時間 7 秒
+  timeout: 300000, // 逾時時間 30 秒
   maximumAge: 0, // 不使用快取位置
 }
 
@@ -55,7 +55,7 @@ export const useLeafletMap = (options = {}) => {
   const { openModal } = modalStore
 
   const mapStore = useMapStore()
-  const { map, mapData, searchResults } = storeToRefs(mapStore)
+  const { map, mapData, searchResults, isLocated, isLocating } = storeToRefs(mapStore)
   const { mapConfig, applyFilterWithView, refreshMapView } = mapStore
   const { defaultZoom, minZoom, maxZoom, maxBounds, maxBoundsViscosity, defaultCenter } = mapConfig
 
@@ -95,9 +95,7 @@ export const useLeafletMap = (options = {}) => {
       map.value.on('moveend', handleMoveEnd)
       map.value.on('locationfound', handleLocationFound)
       map.value.on('locationerror', handleLocationError)
-      map.value.on('zoomend', () => {
-        zoomLevel.value = map.value.getZoom()
-      })
+      map.value.on('zoomend', handleZoomend)
 
       // 初始定位
       map.value.locate(locateOptions)
@@ -120,6 +118,17 @@ export const useLeafletMap = (options = {}) => {
 
     // 移動到使用者位置
     map.value.setView(e.latlng, 16, { animate: true })
+
+    // 只在初始定位時執行 applyFilterWithView
+    if (!isLocated.value) {
+      applyFilterWithView()
+      isLocated.value = true
+    } else {
+      // 手動定位時只更新資料,不調整視野
+      refreshMapView()
+    }
+
+    isLocating.value = false
   }
 
   // 處理定位錯誤
@@ -138,7 +147,17 @@ export const useLeafletMap = (options = {}) => {
     }
 
     warningMsg(message)
+
+    // 初始定位完成，並載入地圖資料
+    isLocated.value = true
+    isLocating.value = false
+
     applyFilterWithView()
+  }
+
+  const handleZoomend = () => {
+    if (!map.value) return
+    zoomLevel.value = map.value.getZoom()
   }
 
   // 處理地圖移動結束
@@ -149,9 +168,10 @@ export const useLeafletMap = (options = {}) => {
 
   // 前往當前位置
   const currentLocation = () => {
-    if (!map.value) return
+    if (!map.value || isLocating.value) return
 
-    // 定位
+    isLocating.value = true
+    // 定位觸發 handleLocationFound 或 handleLocationError
     map.value.locate(locateOptions)
   }
 
@@ -229,7 +249,7 @@ export const useLeafletMap = (options = {}) => {
       map.value.off('moveend', handleMoveEnd)
       map.value.off('locationfound', handleLocationFound)
       map.value.off('locationerror', handleLocationError)
-      map.value.off('zoomend')
+      map.value.off('zoomend', handleZoomend)
 
       // 停止任何進行中的定位
       map.value.stopLocate()
@@ -240,7 +260,9 @@ export const useLeafletMap = (options = {}) => {
     }
 
     // 重置其他狀態
-    zoomLevel.value = mapConfig.defaultZoom
+    zoomLevel.value = defaultZoom
+    isLocated.value = false
+    isLocating.value = false
   }
 
   watch(
@@ -265,6 +287,8 @@ export const useLeafletMap = (options = {}) => {
     markerClusterGroup,
     locationMarker,
     zoomLevel,
+    isLocated,
+    isLocating,
     initMap,
     currentLocation,
     clearMarkers,

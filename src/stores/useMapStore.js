@@ -26,6 +26,8 @@ export const useMapStore = defineStore('map', () => {
   const searchResults = ref(null)
   const isSearch = ref(false)
   const filterDrawer = ref(false)
+  const isLocating = ref(false) // 是否正在定位
+  const isLocated = ref(false) // 是否已完成首次定位
 
   const isFiltered = computed(() => !!typeFilter.value || featuresFilter.value.length > 0)
 
@@ -123,6 +125,8 @@ export const useMapStore = defineStore('map', () => {
     searchResults,
     isSearch,
     filterDrawer,
+    isLocated,
+    isLocating,
     searchAddress,
     applyFilter,
     applyFilterWithView,

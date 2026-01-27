@@ -1,16 +1,28 @@
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLoadingStore } from '@/stores/useLoadingStore'
+import { useMapStore } from '@/stores/useMapStore'
 import { useSocketEvents } from '@/composables/useSocketEvents'
 import { useViewportHeight } from '@/composables/useViewportHeight'
 
 const loadingStore = useLoadingStore()
 const { isAppLoading } = storeToRefs(loadingStore)
 
+const mapStore = useMapStore()
+const { isLocated } = storeToRefs(mapStore)
+
 const { initSocket } = useSocketEvents()
 
 useViewportHeight()
+
+const loadingText = computed(() => {
+  if (isAppLoading.value) {
+    return '加載中，請稍後'
+  } else {
+    return '正在取得您的位置...'
+  }
+})
 
 onMounted(() => {
   initSocket()
@@ -31,11 +43,11 @@ const themeOverrides = {
     <n-message-provider>
       <n-dialog-provider>
         <div
-          v-if="isAppLoading"
+          v-if="isAppLoading || !isLocated"
           class="fixed inset-0 z-[999] bg-white/80 flex items-center flex-col justify-center"
         >
           <img src="@/assets/images/loading.gif" alt="" width="84" />
-          <p>加載中，請稍後</p>
+          <p>{{ loadingText }}</p>
         </div>
 
         <div class="h-screen-safe">
