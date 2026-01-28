@@ -6,14 +6,19 @@ export const useInfoStore = defineStore('info', () => {
   const userData = ref(null)
   const features = ref([])
   const contribute = ref([])
+  const reportTypes = ref([])
 
   const fetchUserData = async () => {
     try {
       const res = await userApi.getUserInfo()
-      const { user, types, locations } = res.data.data
+      const { user, types, locations, reportTypes: rpTypes } = res.data.data
       userData.value = user
       features.value = types
       contribute.value = locations
+      reportTypes.value = rpTypes.map((item) => {
+        const type = item.code.split('_')[0].toLowerCase()
+        return { ...item, type }
+      })
     } catch (error) {
       return Promise.reject(error)
     }
@@ -40,6 +45,7 @@ export const useInfoStore = defineStore('info', () => {
     userData,
     features,
     contribute,
+    reportTypes,
     fetchUserData,
     updateFeature,
     removeFeature,

@@ -7,7 +7,7 @@ import { formatTimezone } from '@/utils/formatDate'
 import { getTypeIcon } from '@/utils/typeIcon'
 
 const modalStore = useModalStore()
-const { closeModal } = modalStore
+const { openModal, closeModal } = modalStore
 const { modalData, modalStates } = storeToRefs(modalStore)
 
 const currentTime = ref(formatTimezone())
@@ -66,8 +66,8 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
   <n-modal
     v-model:show="modalStates.postcard"
     :mask-closable="false"
-    :closable="false"
     :autoFocus="false"
+    :close-on-esc="false"
     preset="card"
   >
     <template #header>
@@ -83,7 +83,7 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
       </div>
     </template>
 
-    <div class="flex flex-col md:flex-row gap-4">
+    <div class="flex flex-col sm:flex-row gap-4">
       <div class="flex-1">
         <n-image :src="modalData?.image" width="100%" :render-toolbar="customToolbar" />
 
@@ -127,7 +127,12 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
     </div>
 
     <template #footer>
-      <n-button block type="default" @click="closeModal('postcard')">關閉</n-button>
+      <div class="flex gap-2">
+        <n-button type="primary" ghost class="flex-1" @click="openModal('reportError')">
+          回報錯誤
+        </n-button>
+        <n-button secondary class="flex-1" @click="closeModal('postcard')">關閉</n-button>
+      </div>
     </template>
   </n-modal>
 </template>

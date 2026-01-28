@@ -14,6 +14,7 @@ export const useModalStore = defineStore('modal', () => {
     editLocation: false,
     deleteLocation: false,
     userInfo: false,
+    reportError: false,
   })
 
   const validateErrorMsg = ref('請確認資料是否填寫齊全無誤')
@@ -21,20 +22,21 @@ export const useModalStore = defineStore('modal', () => {
   // 用來開啟指定的 modal
   const openModal = (modalName, data = null) => {
     modalStates.value[modalName] = true
-    modalData.value = data
+    if (modalName !== 'reportError') modalData.value = data
   }
 
   // 用來關閉指定的 modal
   const closeModal = (modalName) => {
     modalStates.value[modalName] = false
+    modalData.value[modalName] = null
   }
 
   // 用來關閉所有的 modal
   const closeAllModals = () => {
     Object.keys(modalStates.value).forEach((key) => {
       modalStates.value[key] = false
+      modalData.value[key] = null
     })
-    modalData.value = null
     modalLoading.value = false
   }
 

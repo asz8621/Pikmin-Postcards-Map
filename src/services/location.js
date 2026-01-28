@@ -19,3 +19,7 @@ export const deleteLocation = (locationId) => {
 export const searchAddress = (address) => {
   return axios.get(`/user/geocoding/search?address=${address}`)
 }
+
+export const reportError = (data) => {
+  return axios.post('/user/reports', data)
+}

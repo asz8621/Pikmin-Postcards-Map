@@ -10,6 +10,7 @@ import LightboxStrip from '@/components/map/LightboxStrip.vue'
 import PostcardModal from '@/components/PostcardModal.vue'
 import ResetPasswordModal from '@/components/ResetPasswordModal.vue'
 import UploadLocationModal from '@/components/UploadLocationModal.vue'
+import ReportErrorModal from '@/components/ReportErrorModal.vue'
 import ContributeDrawer from '@/components/contribute/ContributeDrawer.vue'
 import UserInfoModal from '@/components/UserInfoModal.vue'
 import { errorMsg } from '@/utils/appMessage'
@@ -57,6 +58,8 @@ Promise.all([fetchUserData(), fetchMapData()])
       <ResetPasswordModal class="w-full xs:w-[420px] m-4 xs:mx-auto" />
 
       <UploadLocationModal class="w-full xs:w-[420px] m-4 xs:mx-auto" />
+
+      <ReportErrorModal class="w-full xs:w-[420px] m-4 xs:mx-auto" />
 
       <UserInfoModal class="w-full xs:w-[420px] m-4 xs:mx-auto" />
     </n-layout-content>
