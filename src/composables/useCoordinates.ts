@@ -3,7 +3,7 @@ export function useCoordinates() {
   const coordsRules = () => ({
     coords: [
       {
-        validator: (_, value) => {
+        validator: (_: unknown, value: string) => {
           if (!value || value.trim() === '') {
             return new Error('請輸入座標')
           }
@@ -11,7 +11,7 @@ export function useCoordinates() {
           const coordRegex = /^\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*$/
           const match = value?.match(coordRegex)
 
-          if (!match) {
+          if (!match || !match[1] || !match[3]) {
             return new Error('座標格式錯誤，請輸入例如：2.3425245, 34.23523552')
           }
 
@@ -30,10 +30,10 @@ export function useCoordinates() {
   })
 
   // 取得經緯度
-  const getCoordinates = (input) => {
+  const getCoordinates = (input: string) => {
     const [latStr, longStr] = input.split(',')
-    const lat = parseFloat(latStr.trim())
-    const long = parseFloat(longStr.trim())
+    const lat = parseFloat(latStr.trim() || '0')
+    const long = parseFloat(longStr.trim() || '0')
 
     return { lat, long }
   }

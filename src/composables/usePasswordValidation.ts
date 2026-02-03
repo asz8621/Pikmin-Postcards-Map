@@ -1,12 +1,19 @@
-import { watch, nextTick } from 'vue'
+import { watch, nextTick, type Ref } from 'vue'
+import type { FormInst, FormItemRule } from 'naive-ui'
 
-export function usePasswordValidation(formRef) {
+interface FormData {
+  password: string
+  passwordOld?: string
+  confirmPassword?: string
+}
+
+export function usePasswordValidation(formRef: Ref<FormInst | null>) {
   // 通用密碼驗證器
-  const createBasePasswordValidator = (label) => [
+  const createBasePasswordValidator = (label: string): FormItemRule[] => [
     { required: true, message: `請輸入${label}`, trigger: 'blur' },
     { min: 8, message: `${label}長度至少 8 個字符`, trigger: ['input', 'blur'] },
     {
-      validator: (rule, value) => {
+      validator: (_rule: FormItemRule, value: string) => {
         if (!value) return true
         const hasLetter = /[a-zA-Z]/.test(value)
         const hasNumber = /\d/.test(value)
@@ -28,7 +35,7 @@ export function usePasswordValidation(formRef) {
   })
 
   // 確認密碼驗證規則
-  const confirmPasswordRules = (formData) => ({
+  const confirmPasswordRules = (formData: FormData) => ({
     confirmPassword: [
       {
         required: true,
@@ -37,9 +44,9 @@ export function usePasswordValidation(formRef) {
       },
       {
         key: 'confirmPassword',
-        validator: (rule, value) => {
+        validator: (_rule: FormItemRule, value: string) => {
           if (!value) return true
-          return value === formData['password']
+          return value === formData.password
         },
         message: '兩次輸入的密碼不一致',
         trigger: ['input', 'blur'],
@@ -48,15 +55,17 @@ export function usePasswordValidation(formRef) {
   })
 
   // 密碼變更監聽器
-  const passwordWatch = (formData) => {
+  const passwordWatch = (formData: FormData) => {
     const validateConfirmPassword = async () => {
-      if (!formData['confirmPassword']) return
+      if (!formData.confirmPassword) return
 
       await nextTick()
-      formRef.value?.validate(null, (rule) => rule?.key === 'confirmPassword').catch(() => {})
+      formRef.value
+        ?.validate(undefined, (rule: FormItemRule) => rule?.key === 'confirmPassword')
+        .catch(() => {})
     }
 
-    watch(() => formData['password'], validateConfirmPassword)
+    watch(() => formData.password, validateConfirmPassword)
   }
 
   return {

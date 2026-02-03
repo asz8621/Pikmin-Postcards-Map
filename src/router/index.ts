@@ -1,8 +1,12 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw, type RouteMeta } from 'vue-router'
 import Cookies from 'js-cookie'
 import { useLoadingStore } from '@/stores/useLoadingStore'
 
-const routes = [
+interface RouteMetaExtended extends RouteMeta {
+  requiresAuth?: boolean
+}
+
+const routes: RouteRecordRaw[] = [
   {
     path: '/',
     redirect: '/login',
@@ -56,12 +60,14 @@ router.beforeEach((to, from) => {
   const loadingStore = useLoadingStore()
   const token = Cookies.get('token')
 
-  if (to.meta.requiresAuth && !token) {
+  // 檢查是否需要身份驗證
+  if ((to.meta as RouteMetaExtended).requiresAuth && !token) {
     loadingStore.closeAppLoading()
     return '/login'
   }
 
-  if (excludedRoutes.includes(to.name)) {
+  // 判斷是否是排除路由
+  if (excludedRoutes.includes(to.name as string)) {
     loadingStore.closeAppLoading()
   } else {
     loadingStore.openAppLoading()

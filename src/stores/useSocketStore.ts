@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { io } from 'socket.io-client'
+import { ref, type Ref } from 'vue'
+import { io, type Socket } from 'socket.io-client'
 import { successMsg, errorMsg, warningMsg } from '@/utils/appMessage'
 
 export const useSocketStore = defineStore('socket', () => {
-  const socket = ref(null)
+  const socket: Ref<Socket | null> = ref(null)
   const isConnected = ref(false)
-  const currentRoom = ref(null)
+  const currentRoom: Ref<[string, number | null] | null> = ref(null)
 
   // 初始化 Socket 連接
   const initSocket = () => {
@@ -34,7 +34,7 @@ export const useSocketStore = defineStore('socket', () => {
       isConnected.value = true
 
       // 重連時自動加入之前的房間
-      if (currentRoom.value) {
+      if (currentRoom.value && socket.value) {
         socket.value.emit('join:page', currentRoom.value)
       }
     })
@@ -63,8 +63,8 @@ export const useSocketStore = defineStore('socket', () => {
   }
 
   // 加入房間
-  const joinRoom = (page, userId = null) => {
-    const roomData = [page, userId]
+  const joinRoom = (page: string, userId: number | null = null) => {
+    const roomData: [string, number | null] = [page, userId]
     currentRoom.value = roomData
 
     if (socket.value?.connected) {
@@ -73,21 +73,21 @@ export const useSocketStore = defineStore('socket', () => {
   }
 
   // 監聽特定事件
-  const socketOn = (event, callback) => {
+  const socketOn = (event: string, callback: (...args: any[]) => void) => {
     if (socket.value) {
       socket.value.on(event, callback)
     }
   }
 
   // 取消監聽特定事件
-  const socketOff = (event, callback) => {
+  const socketOff = (event: string, callback?: (...args: any[]) => void) => {
     if (socket.value) {
       socket.value.off(event, callback)
     }
   }
 
   // 發送事件
-  const socketEmit = (event, data) => {
+  const socketEmit = (event: string, data: any) => {
     if (socket.value?.connected) {
       socket.value.emit(event, data)
     }

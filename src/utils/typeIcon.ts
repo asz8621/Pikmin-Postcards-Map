@@ -3,12 +3,12 @@ import flowerIcon from '@/assets/images/flower.png'
 import questionMark from '@/assets/images/question-mark.png'
 import flowerRadarIcon from '@/assets/images/flower-radar.png'
 
-const iconMap = {
+const iconMap: Record<string, string> = {
   mushroom: mushroomIcon,
   flower: flowerIcon,
 }
 
-export const getTypeIcon = (type, explore) => {
+export const getTypeIcon = (type: string, explore?: boolean): string => {
   if (type === 'flower' && explore === true) {
     return flowerRadarIcon
   }

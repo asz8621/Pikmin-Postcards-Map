@@ -1,7 +1,7 @@
 import { errorMsg } from '@/utils/appMessage'
 
 export const useApiError = () => {
-  const handleError = (err, defaultMsg = '操作失敗,請聯絡管理員') => {
+  const handleError = (err: any, defaultMsg = '操作失敗,請聯絡管理員') => {
     // 表單驗證錯誤不處理
     if (typeof err === 'object' && Array.isArray(err)) return
 

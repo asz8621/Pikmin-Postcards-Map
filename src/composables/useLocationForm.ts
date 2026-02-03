@@ -1,4 +1,7 @@
-export function useLocationForm() {
+export const useLocationForm = () => {
+  type FormData = { explore: boolean; [key: string]: unknown }
+  type LocationType = 'flower' | 'mushroom'
+
   // 類型選項
   const typeOptions = [
     { label: '花', value: 'flower' },
@@ -6,7 +9,7 @@ export function useLocationForm() {
   ]
 
   // 蘑菇禁止修改隱藏版
-  const typeChange = (formData, type) => {
+  const typeChange = (formData: FormData, type: LocationType) => {
     if (type === 'mushroom') {
       formData.explore = false
     }

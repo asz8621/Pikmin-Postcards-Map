@@ -1,7 +1,19 @@
+import type { UploadFileInfo } from 'naive-ui'
 import { errorMsg } from '@/utils/appMessage'
 
+interface FileUploadOptions {
+  maxSizeMB?: number
+  allowedTypes?: string[]
+  maxImageSize?: number
+  jpegQuality?: number
+}
+
+interface UploadFile extends UploadFileInfo {
+  size: number
+}
+
 // 檔案上傳與處理相關的 composable
-export const useFileUpload = (options = {}) => {
+export const useFileUpload = (options: FileUploadOptions = {}) => {
   const {
     maxSizeMB = 5,
     allowedTypes = ['image/png', 'image/jpeg'],
@@ -12,12 +24,12 @@ export const useFileUpload = (options = {}) => {
   const maxSizeBytes = maxSizeMB * 1024 * 1024
 
   // 圖片驗證規則
-  const imageFileRules = (imageUrl) => ({
+  const imageFileRules = (imageUrl?: string) => ({
     imageFile: [
       {
         key: 'imageFile',
         required: true,
-        validator: (_, value) => {
+        validator: (_: unknown, value: UploadFile) => {
           const result = validateImageFile(value, imageUrl)
           return result
         },
@@ -27,7 +39,7 @@ export const useFileUpload = (options = {}) => {
   })
 
   // 檢查檔案格式與大小
-  const validateImageFile = (file, imageUrl) => {
+  const validateImageFile = (file: UploadFile, imageUrl?: string): true | Error => {
     if (!file && imageUrl) return true // 沒重新上傳不驗證(編輯用)
 
     if (!file) {
@@ -52,16 +64,22 @@ export const useFileUpload = (options = {}) => {
   }
 
   // 上傳前驗證
-  const beforeUpload = (uploadData) => {
-    const file = uploadData.file.file
+  const beforeUpload = (uploadData: { file: UploadFileInfo }) => {
+    const file = uploadData?.file?.file as File | undefined
+
+    if (!file) {
+      errorMsg('檔案資訊錯誤')
+      return false
+    }
+
     const fileData = {
       file,
       name: file.name,
       size: file.size,
       type: file.type,
-    }
+    } as UploadFile
 
-    const result = validateImageFile(fileData)
+    const result = validateImageFile(fileData, undefined)
 
     if (result instanceof Error) {
       errorMsg(result.message)
@@ -72,13 +90,13 @@ export const useFileUpload = (options = {}) => {
   }
 
   // 縮放並轉換圖片為 JPG
-  const resizeAndConvertToJPG = (file) => {
+  const resizeAndConvertToJPG = (file: File): Promise<File> => {
     return new Promise((resolve, reject) => {
       const img = new Image()
       const reader = new FileReader()
 
       reader.onload = () => {
-        img.src = reader.result
+        img.src = reader.result as string
       }
 
       img.onload = () => {
@@ -123,15 +141,15 @@ export const useFileUpload = (options = {}) => {
   }
 
   // FormData 處理
-  const buildFormData = async (data) => {
+  const buildFormData = async (data: Record<string, any>) => {
     const formData = new FormData()
 
     for (const [key, value] of Object.entries(data)) {
       if (key === 'imageFile' && value) {
-        const compressedFile = await resizeAndConvertToJPG(value)
+        const compressedFile = await resizeAndConvertToJPG(value as File)
         formData.append('imageFile', compressedFile)
-      } else {
-        formData.append(key, value)
+      } else if (value !== null && value !== undefined) {
+        formData.append(key, value as string)
       }
     }
 

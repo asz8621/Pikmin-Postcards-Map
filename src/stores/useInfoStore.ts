@@ -1,12 +1,20 @@
-import { ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { defineStore } from 'pinia'
 import { userApi } from '@/services'
+import type { UserInfo, Feature } from '@/types'
+
+interface ReportType {
+  id: number
+  code: string
+  name: string
+  type: string
+}
 
 export const useInfoStore = defineStore('info', () => {
-  const userData = ref(null)
-  const features = ref([])
-  const contribute = ref([])
-  const reportTypes = ref([])
+  const userData: Ref<UserInfo | null> = ref(null)
+  const features: Ref<Feature[]> = ref([])
+  const contribute: Ref<any[]> = ref([])
+  const reportTypes: Ref<ReportType[]> = ref([])
 
   const fetchUserData = async () => {
     try {
@@ -15,8 +23,8 @@ export const useInfoStore = defineStore('info', () => {
       userData.value = user
       features.value = types
       contribute.value = locations
-      reportTypes.value = rpTypes.map((item) => {
-        const type = item.code.split('_')[0].toLowerCase()
+      reportTypes.value = rpTypes.map((item: ReportType) => {
+        const type = item.code.split('_')[0]?.toLowerCase() ?? ''
         return { ...item, type }
       })
     } catch (error) {
@@ -24,7 +32,7 @@ export const useInfoStore = defineStore('info', () => {
     }
   }
 
-  const updateFeature = (data) => {
+  const updateFeature = (data: Feature) => {
     const featureIndex = features.value.findIndex((item) => item.id === data.id)
     if (featureIndex !== -1) {
       features.value[featureIndex] = data
@@ -33,11 +41,11 @@ export const useInfoStore = defineStore('info', () => {
     }
   }
 
-  const removeFeature = (id) => {
+  const removeFeature = (id: number) => {
     features.value = features.value.filter((item) => item.id !== id)
   }
 
-  const setUserData = (data) => {
+  const setUserData = (data: UserInfo) => {
     userData.value = data
   }
 

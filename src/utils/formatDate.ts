@@ -5,7 +5,7 @@ import timezone from 'dayjs/plugin/timezone'
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
-export const formatDate = (date) => {
+export const formatDate = (date: string | Date | null | undefined): string => {
   if (!date) return '-'
 
   try {
@@ -16,7 +16,7 @@ export const formatDate = (date) => {
   }
 }
 
-export const formatTimezone = (timezone = 'Asia/Taipei') => {
+export const formatTimezone = (timezone = 'Asia/Taipei'): string => {
   const timestamp = new Date()
   try {
     const weekdayMap = ['日', '一', '二', '三', '四', '五', '六']

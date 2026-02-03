@@ -1,7 +1,8 @@
-import { ref, computed, shallowRef } from 'vue'
+import { ref, computed, shallowRef, type Ref } from 'vue'
 import { defineStore } from 'pinia'
 import { locationApi } from '@/services'
-import L from 'leaflet'
+import * as L from 'leaflet'
+import type { LocationData, SearchResult } from '@/types'
 
 export const useMapStore = defineStore('map', () => {
   // 地圖配置
@@ -17,13 +18,13 @@ export const useMapStore = defineStore('map', () => {
     maxBoundsViscosity: 1.0,
   }
 
-  const map = shallowRef(null)
+  const map = shallowRef<L.Map | null>(null)
 
-  const mapAllData = ref([])
-  const mapData = ref([])
-  const typeFilter = ref(null)
-  const featuresFilter = ref([])
-  const searchResults = ref(null)
+  const mapAllData: Ref<LocationData[]> = ref([])
+  const mapData: Ref<LocationData[]> = ref([])
+  const typeFilter: Ref<string | null> = ref(null)
+  const featuresFilter: Ref<number[]> = ref([])
+  const searchResults: Ref<SearchResult | null> = ref(null)
   const isSearch = ref(false)
   const filterDrawer = ref(false)
   const isLocating = ref(false) // 是否正在定位
@@ -31,20 +32,20 @@ export const useMapStore = defineStore('map', () => {
 
   const isFiltered = computed(() => !!typeFilter.value || featuresFilter.value.length > 0)
 
-  const addLocation = (newData) => {
+  const addLocation = (newData: LocationData) => {
     mapAllData.value.push(newData)
   }
 
-  const updateLocation = (id, newData) => {
+  const updateLocation = (id: number, newData: Partial<LocationData>) => {
     const index = mapAllData.value.findIndex((item) => item.id === id)
     if (index !== -1) {
-      mapAllData.value[index] = { ...mapAllData.value[index], ...newData }
+      mapAllData.value[index] = { ...mapAllData.value[index], ...newData } as LocationData
     } else {
-      addLocation(newData)
+      addLocation(newData as LocationData)
     }
   }
 
-  const removeLocation = (id) => {
+  const removeLocation = (id: number) => {
     mapAllData.value = mapAllData.value.filter((item) => item.id !== id)
   }
 
@@ -57,7 +58,7 @@ export const useMapStore = defineStore('map', () => {
     }
   }
 
-  const applyFilter = (bounds) => {
+  const applyFilter = (bounds: L.LatLngBounds) => {
     const hasType = !!typeFilter.value
     const hasFeature = featuresFilter.value.length > 0
 
@@ -65,7 +66,7 @@ export const useMapStore = defineStore('map', () => {
       const inBounds = bounds.contains([location.lat, location.long])
       const typeMatch = hasType ? location.type === typeFilter.value : true
       const featureMatch = hasFeature
-        ? featuresFilter.value.every((fid) => location.features.some((f) => f.id === fid))
+        ? featuresFilter.value.every((fid) => location.features?.some((f) => f.id === fid))
         : true
 
       if (!hasType && !hasFeature) return inBounds
@@ -79,23 +80,26 @@ export const useMapStore = defineStore('map', () => {
 
   // 篩選並調整地圖視野
   const applyFilterWithView = () => {
-    if (!map.value) return []
+    const leafletMap = map.value
+    if (!leafletMap) return []
 
-    const filtered = applyFilter(map.value.getBounds())
+    const filtered = applyFilter(leafletMap.getBounds())
 
     // 根據篩選結果調整地圖視野
     if (isFiltered.value) {
       // 有篩選條件：縮到最小，顯示全球
-      map.value.setZoom(mapConfig.minZoom, { animate: true })
+      leafletMap.setZoom(mapConfig.minZoom, { animate: true })
     } else if (filtered.length > 0) {
       // 無篩選條件且有結果：自動調整視野以顯示所有點
-      const latLngs = filtered.map((item) => [item.lat, item.long])
-      const bounds = L.latLngBounds(latLngs)
-      map.value.fitBounds(bounds, { padding: [50, 50], animate: true })
+      const coordinates: [number, number][] = filtered.map((item) => [item.lat, item.long])
+      const bounds = L.latLngBounds(coordinates)
+      leafletMap.fitBounds(bounds, { padding: [50, 50], animate: true })
     }
+
+    return filtered
   }
 
-  const searchAddress = async (address) => {
+  const searchAddress = async (address: string) => {
     try {
       isSearch.value = true
       const encodedAddress = encodeURIComponent(address.trim())
@@ -110,18 +114,21 @@ export const useMapStore = defineStore('map', () => {
 
   // 刷新地圖
   const refreshMapView = () => {
-    if (!map.value) return
-    applyFilter(map.value.getBounds())
+    const leafletMap = map.value
+    if (!leafletMap) return
+    applyFilter(leafletMap.getBounds())
   }
 
   const zoomIn = () => {
-    if (!map.value || map.value.getZoom() >= map.value.getMaxZoom()) return
-    map.value.zoomIn()
+    const leafletMap = map.value
+    if (!leafletMap || leafletMap.getZoom() >= leafletMap.getMaxZoom()) return
+    leafletMap.zoomIn()
   }
 
   const zoomOut = () => {
-    if (!map.value || map.value.getZoom() <= map.value.getMinZoom()) return
-    map.value.zoomOut()
+    const leafletMap = map.value
+    if (!leafletMap || leafletMap.getZoom() <= leafletMap.getMinZoom()) return
+    leafletMap.zoomOut()
   }
 
   return {

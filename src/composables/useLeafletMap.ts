@@ -1,10 +1,12 @@
 import { ref, shallowRef, markRaw, watch } from 'vue'
-import L from 'leaflet'
+import * as L from 'leaflet'
+import type { LocationEvent, ErrorEvent } from 'leaflet'
 import 'leaflet.markercluster'
 import { useModalStore } from '@/stores/useModalStore'
 import { useMapStore } from '@/stores/useMapStore'
 import { storeToRefs } from 'pinia'
 import { warningMsg, errorMsg } from '@/utils/appMessage'
+import type { LocationData } from '@/types'
 
 import locationIconImg from '@/assets/images/location.png'
 import mushroomIcon from '@/assets/images/mushroom.png'
@@ -12,7 +14,7 @@ import flowerIcon from '@/assets/images/flower.png'
 import questionMark from '@/assets/images/question-mark.png'
 
 // 建立地圖圖標
-const createIcon = (iconPath) => {
+const createIcon = (iconPath: string) => {
   return L.icon({
     iconUrl: iconPath,
     iconSize: [32, 32],
@@ -21,8 +23,10 @@ const createIcon = (iconPath) => {
   })
 }
 
+type MapIconKey = 'location' | 'mushroom' | 'flower' | 'default'
+
 // 地圖圖標配置
-const mapIcons = markRaw({
+const mapIcons: Record<MapIconKey, L.Icon> = markRaw({
   location: createIcon(locationIconImg),
   mushroom: createIcon(mushroomIcon),
   flower: createIcon(flowerIcon),
@@ -30,7 +34,12 @@ const mapIcons = markRaw({
 })
 
 // 根據類型獲取對應圖標
-const getIcon = (type) => mapIcons[type] || mapIcons.default
+const getIcon = (type: string): L.Icon => {
+  if (type in mapIcons) {
+    return mapIcons[type as MapIconKey]
+  }
+  return mapIcons.default
+}
 
 // 定位選項配置
 const locateOptions = {
@@ -40,15 +49,15 @@ const locateOptions = {
   maximumAge: 0, // 不使用快取位置
 }
 
-const debounce = (fn, delay) => {
-  let timeoutId
-  return (...args) => {
+const debounce = <T extends (...args: unknown[]) => void>(fn: T, delay: number) => {
+  let timeoutId: ReturnType<typeof setTimeout>
+  return (...args: Parameters<T>) => {
     clearTimeout(timeoutId)
     timeoutId = setTimeout(() => fn(...args), delay)
   }
 }
 
-export const useLeafletMap = (options = {}) => {
+export const useLeafletMap = (options: { containerId?: string } = {}) => {
   const { containerId } = options
 
   const modalStore = useModalStore()
@@ -59,8 +68,8 @@ export const useLeafletMap = (options = {}) => {
   const { mapConfig, applyFilterWithView, refreshMapView } = mapStore
   const { defaultZoom, minZoom, maxZoom, maxBounds, maxBoundsViscosity, defaultCenter } = mapConfig
 
-  const markerClusterGroup = shallowRef(null)
-  const locationMarker = shallowRef(null)
+  const markerClusterGroup = shallowRef<L.MarkerClusterGroup | null>(null)
+  const locationMarker = shallowRef<L.Marker | null>(null)
   const zoomLevel = ref(defaultZoom)
 
   // 初始化地圖
@@ -71,51 +80,53 @@ export const useLeafletMap = (options = {}) => {
         return
       }
 
-      map.value = markRaw(
-        L.map(containerId, {
-          doubleClickZoom: false,
-          zoomControl: false,
-          minZoom,
-          maxZoom,
-          maxBounds,
-          maxBoundsViscosity,
-          worldCopyJump: true,
-        }).setView(defaultCenter, zoomLevel.value),
-      )
+      const instance = L.map(containerId, {
+        doubleClickZoom: false,
+        zoomControl: false,
+        minZoom,
+        maxZoom,
+        maxBounds: maxBounds as L.LatLngBoundsExpression,
+        maxBoundsViscosity,
+        worldCopyJump: true,
+      }).setView(defaultCenter as [number, number], zoomLevel.value)
+
+      map.value = markRaw(instance)
 
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
         subdomains: 'abcd',
         maxZoom,
-      }).addTo(map.value)
+      }).addTo(instance)
 
       // 綁定地圖事件
-      map.value.on('moveend', handleMoveEnd)
-      map.value.on('locationfound', handleLocationFound)
-      map.value.on('locationerror', handleLocationError)
-      map.value.on('zoomend', handleZoomend)
+      instance.on('moveend', handleMoveEnd)
+      instance.on('locationfound', handleLocationFound)
+      instance.on('locationerror', handleLocationError)
+      instance.on('zoomend', handleZoomend)
 
       // 初始定位
-      map.value.locate(locateOptions)
+      instance.locate(locateOptions)
     } catch (error) {
       errorMsg(`地圖載入失敗: ${error}`)
     }
   }
 
   // 處理定位成功
-  const handleLocationFound = (e) => {
-    if (!map.value) return
+  const handleLocationFound = (e: LocationEvent) => {
+    const leafletMap = map.value
+    if (!leafletMap) return
 
     // 移除舊的位置標記
     if (locationMarker.value) {
       locationMarker.value.remove()
     }
 
-    locationMarker.value = L.marker(e.latlng, { icon: mapIcons.location })
-    locationMarker.value.addTo(map.value).bindPopup('您的位置')
+    const marker = L.marker(e.latlng, { icon: mapIcons.location })
+    marker.addTo(leafletMap).bindPopup('您的位置')
+    locationMarker.value = marker
 
     // 移動到使用者位置
-    map.value.setView(e.latlng, 16, { animate: true })
+    leafletMap.setView(e.latlng, 16, { animate: true })
 
     // 只在初始定位時執行 applyFilterWithView
     if (!isLocated.value) {
@@ -130,7 +141,7 @@ export const useLeafletMap = (options = {}) => {
   }
 
   // 處理定位錯誤
-  const handleLocationError = (error) => {
+  const handleLocationError = (error: ErrorEvent) => {
     let message = '無法取得您的位置，使用預設座標'
     switch (error.code) {
       case 1: // PERMISSION_DENIED
@@ -154,44 +165,42 @@ export const useLeafletMap = (options = {}) => {
   }
 
   const handleZoomend = () => {
-    if (!map.value) return
-    zoomLevel.value = map.value.getZoom()
+    const leafletMap = map.value
+    if (!leafletMap) return
+    zoomLevel.value = leafletMap.getZoom()
   }
 
   // 處理地圖移動結束
   const handleMoveEnd = debounce(() => {
-    if (!map.value) return
     refreshMapView()
   }, 200)
 
   // 前往當前位置
   const currentLocation = () => {
-    if (!map.value || isLocating.value) return
+    const leafletMap = map.value
+    if (!leafletMap || isLocating.value) return
 
     isLocating.value = true
     // 定位觸發 handleLocationFound 或 handleLocationError
-    map.value.locate(locateOptions)
+    leafletMap.locate(locateOptions)
   }
 
   // 清除標記
   const clearMarkers = () => {
-    if (!map.value || !markerClusterGroup.value) return
+    const clusterGroup = markerClusterGroup.value
+    if (!clusterGroup) return
 
     // 清理 cluster group 內的所有 marker
-    markerClusterGroup.value.clearLayers()
-    map.value.removeLayer(markerClusterGroup.value)
+    clusterGroup.clearLayers()
+    map.value?.removeLayer(clusterGroup)
     markerClusterGroup.value = null
   }
 
   // 渲染標記
-  const renderMarkers = (data) => {
-    if (!map.value) {
+  const renderMarkers = (data: LocationData[]) => {
+    const leafletMap = map.value
+    if (!leafletMap) {
       errorMsg('地圖未初始化，標記載入失敗')
-      return
-    }
-
-    if (!Array.isArray(data)) {
-      errorMsg('標記數據格式錯誤')
       return
     }
 
@@ -200,34 +209,39 @@ export const useLeafletMap = (options = {}) => {
       clearMarkers()
 
       // 創建新的 cluster group
-      markerClusterGroup.value = markRaw(L.markerClusterGroup())
+      const clusterGroup = markRaw(L.markerClusterGroup())
+      markerClusterGroup.value = clusterGroup
 
       data.forEach((item) => {
         const marker = L.marker([item.lat, item.long], {
           icon: getIcon(item.type),
         })
         marker.on('click', () => openModal('postcard', item))
-        markerClusterGroup.value.addLayer(marker)
+        clusterGroup.addLayer(marker)
       })
 
-      map.value.addLayer(markerClusterGroup.value)
+      leafletMap.addLayer(clusterGroup)
     } catch (error) {
       errorMsg(`標記載入失敗: ${error}`)
     }
   }
 
+  type SearchCoordinate = { lat: number; lng: number }
+  type SearchViewport = { northeast: SearchCoordinate; southwest: SearchCoordinate }
+
   // 移動到搜尋位置
-  const moveToSearchLocation = (location, viewport) => {
-    if (!map.value) return
+  const moveToSearchLocation = (location: SearchCoordinate, viewport?: SearchViewport) => {
+    const leafletMap = map.value
+    if (!leafletMap) return
 
     if (viewport?.northeast && viewport?.southwest) {
       const bounds = L.latLngBounds(
         [viewport.southwest.lat, viewport.southwest.lng],
         [viewport.northeast.lat, viewport.northeast.lng],
       )
-      map.value.fitBounds(bounds, { padding: [50, 50], animate: true })
+      leafletMap.fitBounds(bounds, { padding: [50, 50], animate: true })
     } else {
-      map.value.setView([location.lat, location.lng], 15, { animate: true })
+      leafletMap.setView([location.lat, location.lng], 15, { animate: true })
     }
   }
 
@@ -243,17 +257,18 @@ export const useLeafletMap = (options = {}) => {
     clearMarkers()
 
     // 清理地圖事件和實例
-    if (map.value) {
-      map.value.off('moveend', handleMoveEnd)
-      map.value.off('locationfound', handleLocationFound)
-      map.value.off('locationerror', handleLocationError)
-      map.value.off('zoomend', handleZoomend)
+    const leafletMap = map.value
+    if (leafletMap) {
+      leafletMap.off('moveend', handleMoveEnd)
+      leafletMap.off('locationfound', handleLocationFound)
+      leafletMap.off('locationerror', handleLocationError)
+      leafletMap.off('zoomend', handleZoomend)
 
       // 停止任何進行中的定位
-      map.value.stopLocate()
+      leafletMap.stopLocate()
 
       // 銷毀地圖實例
-      map.value.remove()
+      leafletMap.remove()
       map.value = null
     }
 
@@ -266,7 +281,6 @@ export const useLeafletMap = (options = {}) => {
   watch(
     () => mapData.value,
     (newData) => {
-      if (!map.value) return
       renderMarkers(newData)
     },
   )
@@ -274,7 +288,7 @@ export const useLeafletMap = (options = {}) => {
   watch(
     () => searchResults.value,
     (newData) => {
-      if (!map.value || !newData?.result?.place_id) return
+      if (!newData?.result?.place_id) return
 
       const { location, viewport } = newData.result
       moveToSearchLocation(location, viewport)
