@@ -114,6 +114,16 @@ export const useMapStore = defineStore('map', () => {
     applyFilter(map.value.getBounds())
   }
 
+  const zoomIn = () => {
+    if (!map.value || map.value.getZoom() >= map.value.getMaxZoom()) return
+    map.value.zoomIn()
+  }
+
+  const zoomOut = () => {
+    if (!map.value || map.value.getZoom() <= map.value.getMinZoom()) return
+    map.value.zoomOut()
+  }
+
   return {
     mapConfig,
     map,
@@ -135,5 +145,7 @@ export const useMapStore = defineStore('map', () => {
     updateLocation,
     removeLocation,
     refreshMapView,
+    zoomIn,
+    zoomOut,
   }
 })

@@ -89,8 +89,6 @@ export const useLeafletMap = (options = {}) => {
         maxZoom,
       }).addTo(map.value)
 
-      L.control.zoom({ position: 'bottomright' }).addTo(map.value)
-
       // 綁定地圖事件
       map.value.on('moveend', handleMoveEnd)
       map.value.on('locationfound', handleLocationFound)

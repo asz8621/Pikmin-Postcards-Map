@@ -10,7 +10,7 @@ import FilterDrawer from '@/components/map/FilterDrawer.vue'
 
 const mapStore = useMapStore()
 const { isFiltered } = storeToRefs(mapStore)
-const { refreshMapView } = mapStore
+const { refreshMapView, zoomIn, zoomOut } = mapStore
 
 const infoStore = useInfoStore()
 const { userData } = storeToRefs(infoStore)
@@ -55,13 +55,44 @@ onBeforeUnmount(() => {
   <div id="map" class="select-none touch-none"></div>
 
   <!-- 我的位置 Icon -->
-  <div class="mapIcon locationIcon" :class="{ locating: isLocating }" @click="currentLocation">
-    <SvgIcon name="location" />
-  </div>
+  <n-popover placement="left" trigger="hover" class="responsivePopover">
+    <template #trigger>
+      <div class="mapIcon locationIcon" :class="{ locating: isLocating }" @click="currentLocation">
+        <SvgIcon name="location" />
+      </div>
+    </template>
+    <div class="large-text">我的位置</div>
+  </n-popover>
 
   <!-- 篩選抽屜 Icon -->
-  <div class="mapIcon drawerIcon" :class="{ filtered: isFiltered }" @click="openFilterDrawer">
-    <SvgIcon name="filter" />
+  <n-popover placement="left" trigger="hover" class="responsivePopover">
+    <template #trigger>
+      <div class="mapIcon drawerIcon" :class="{ filtered: isFiltered }" @click="openFilterDrawer">
+        <SvgIcon name="filter" />
+      </div>
+    </template>
+    <div class="large-text">篩選</div>
+  </n-popover>
+
+  <!-- zoom Icon -->
+  <div class="zoomControls">
+    <n-popover placement="left" trigger="hover" class="responsivePopover" ref="zoomPopover">
+      <template #trigger>
+        <div class="zoomIcon" @click="zoomIn">
+          <SvgIcon name="plus" />
+        </div>
+      </template>
+      <div class="large-text">放大</div>
+    </n-popover>
+
+    <n-popover placement="left" trigger="hover" class="responsivePopover" ref="zoomPopoverOut">
+      <template #trigger>
+        <div class="zoomIcon" @click="zoomOut">
+          <SvgIcon name="horizontal" />
+        </div>
+      </template>
+      <div class="large-text">缩小</div>
+    </n-popover>
   </div>
 
   <FilterDrawer />
@@ -128,6 +159,52 @@ onBeforeUnmount(() => {
   50% {
     opacity: 0.5;
     transform: scale(1.1);
+  }
+}
+.zoomControls {
+  position: absolute;
+  bottom: 114px;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  width: 32px;
+  height: 60px;
+  z-index: 1000;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    border: 1px solid #ccc;
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+  .zoomIcon {
+    width: 100%;
+    height: 30px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    padding: 0.25rem;
+    cursor: pointer;
+    &:hover {
+      background: #f4f4f4;
+    }
+    &:first-child {
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+    }
+    &:last-child {
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+    }
+  }
+}
+@media (max-width: 768px) {
+  .responsivePopover {
+    display: none !important;
   }
 }
 </style>
