@@ -1,5 +1,6 @@
-<script setup>
+<script setup lang="ts">
 import { ref, watch, useTemplateRef, computed } from 'vue'
+import type { UploadCustomRequestOptions } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
@@ -9,6 +10,16 @@ import { useCoordinates } from '@/composables/useCoordinates'
 import { useLocationForm } from '@/composables/useLocationForm'
 import { successMsg } from '@/utils/appMessage'
 import { locationApi } from '@/services'
+
+interface UploadFormData {
+  image?: string | null
+  imageFile?: File | null
+  type: string | null
+  coords: string | null
+  explore: boolean
+  lat?: number
+  long?: number
+}
 
 const infoStore = useInfoStore()
 const { fetchUserData } = infoStore
@@ -24,7 +35,7 @@ const { coordsRules, getCoordinates } = useCoordinates()
 const { typeOptions, typeChange, typeRules } = useLocationForm()
 
 const uploadLocationFormRef = useTemplateRef('uploadLocationFormRef')
-const locationFormData = ref({
+const locationFormData = ref<UploadFormData>({
   image: null,
   imageFile: null,
   type: null,
@@ -44,31 +55,35 @@ const fileListClass = computed(() => {
 
 // 清除表單資料
 const resetLocationFormData = () => {
-  for (let key in locationFormData.value) {
-    if (key === 'explore') {
-      locationFormData.value[key] = false
-    } else {
-      locationFormData.value[key] = null
-    }
+  locationFormData.value = {
+    image: null,
+    imageFile: null,
+    type: null,
+    coords: null,
+    explore: false,
   }
 }
 
 // 蘑菇禁止修改隱藏版
-const updateType = (type) => {
+const updateType = (type: 'flower' | 'mushroom') => {
   typeChange(locationFormData.value, type)
 }
 
 // 暫存圖片到表單資料
-const customUpload = ({ file, onFinish }) => {
-  locationFormData.value.imageFile = file.file
-  uploadLocationFormRef.value?.validate(null, (rule) => rule?.key === 'imageFile').catch(() => {})
+const customUpload = ({ file, onFinish }: UploadCustomRequestOptions) => {
+  locationFormData.value.imageFile = file.file as File
+  uploadLocationFormRef.value
+    ?.validate(null, (rule: { key?: string }) => rule?.key === 'imageFile')
+    .catch(() => {})
   onFinish()
 }
 
 // 移除上傳檔案
 const handleRemove = () => {
   locationFormData.value.imageFile = null
-  uploadLocationFormRef.value?.validate(null, (rule) => rule?.key === 'imageFile').catch(() => {})
+  uploadLocationFormRef.value
+    ?.validate(null, (rule: { key?: string }) => rule?.key === 'imageFile')
+    .catch(() => {})
 }
 
 const handleUploadLocation = async () => {
@@ -80,11 +95,11 @@ const handleUploadLocation = async () => {
     return
   }
 
-  const { lat, long } = getCoordinates(locationFormData.value.coords)
+  const { lat, long } = getCoordinates(locationFormData.value.coords || '')
   locationFormData.value.lat = lat
   locationFormData.value.long = long
 
-  const apiData = { ...locationFormData.value }
+  const apiData: Record<string, unknown> = { ...locationFormData.value }
   delete apiData.coords
 
   const formData = await buildFormData(apiData)
@@ -92,7 +107,7 @@ const handleUploadLocation = async () => {
   modalLoading.value = true
 
   try {
-    const res = await locationApi.createLocation(formData, { timeout: 30000 })
+    const res = await locationApi.createLocation(formData as FormData, 30000)
     successMsg(res.data.message || '上傳成功')
     closeModal('uploadLocation')
     await fetchUserData()

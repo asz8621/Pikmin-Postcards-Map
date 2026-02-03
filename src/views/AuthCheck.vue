@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
@@ -20,7 +20,7 @@ onMounted(() => {
 
   if (error) {
     // 錯誤訊息對應表
-    const errorMessages = {
+    const errorMessages: Record<string, string> = {
       google_oauth_init_failed: 'Google OAuth 初始化失敗',
       facebook_oauth_init_failed: 'Facebook OAuth 初始化失敗',
       google_code_error: 'Google 授權碼錯誤',
@@ -41,6 +41,12 @@ onMounted(() => {
   if (returnedState !== storedState) {
     errorMsg('驗證錯誤，請重新登入')
     localStorage.removeItem('oauth_state')
+    router.push('/login')
+    return
+  }
+
+  if (!token) {
+    errorMsg('登入失敗：無法取得 token')
     router.push('/login')
     return
   }

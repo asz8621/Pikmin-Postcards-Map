@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModalStore } from '@/stores/useModalStore'
@@ -17,7 +17,7 @@ const { modalStates } = storeToRefs(modalStore)
 
 const { useSocketListener, handleUserContribute } = useSocketEvents()
 
-useSocketListener('info', handleUserContribute)
+useSocketListener('info', handleUserContribute as (...args: unknown[]) => void)
 
 const checkStrategy = ref('all')
 const filteredContribute = computed(() => {
@@ -36,15 +36,17 @@ const checkStrategyAlert = computed(() => {
   }
 })
 
-const statusMap = {
+type ImageStatus = 'approved' | 'pending' | 'rejected'
+
+const statusMap: Record<ImageStatus, { text: string; type: string }> = {
   approved: { text: '已通過', type: 'success' },
   pending: { text: '審核中', type: 'warning' },
   rejected: { text: '駁回', type: 'error' },
 }
-const getStatusText = (status) => statusMap[status]?.text || '狀態異常'
-const getStatusType = (status) => statusMap[status]?.type || 'default'
+const getStatusText = (status: ImageStatus) => statusMap[status]?.text || '狀態異常'
+const getStatusType = (status: ImageStatus) => statusMap[status]?.type || 'default'
 
-const onDrawerShowChange = (show) => {
+const onDrawerShowChange = (show: boolean) => {
   if (!show) {
     closeModal('contribute')
     checkStrategy.value = 'all'

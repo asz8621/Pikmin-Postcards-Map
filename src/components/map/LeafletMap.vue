@@ -1,9 +1,13 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/useMapStore'
 import { useInfoStore } from '@/stores/useInfoStore'
-import { useSocketEvents } from '@/composables/useSocketEvents'
+import {
+  useSocketEvents,
+  type SocketPostcardPayload,
+  type SocketLocationPayload,
+} from '@/composables/useSocketEvents'
 import { useLeafletMap } from '@/composables/useLeafletMap'
 import { useMapFilter } from '@/composables/useMapFilter'
 import FilterDrawer from '@/components/map/FilterDrawer.vue'
@@ -24,12 +28,12 @@ const { initMap, currentLocation, cleanupMap, isLocating } = useLeafletMap({
 const { openFilterDrawer } = useMapFilter()
 
 // 類型 socket 處理
-const handlePostcardTypeSocket = (socketData) => {
+const handlePostcardTypeSocket = (socketData: SocketPostcardPayload) => {
   handlePostcardType(socketData)
 }
 
 // 點位 socket 處理
-const handleLocationSocket = (socketData) => {
+const handleLocationSocket = (socketData: SocketLocationPayload) => {
   // 資料處理
   handleLocation(socketData)
 
@@ -38,8 +42,8 @@ const handleLocationSocket = (socketData) => {
 }
 
 // 註冊 Socket 事件監聽器
-useSocketListener('postcardType', handlePostcardTypeSocket)
-useSocketListener('location', handleLocationSocket)
+useSocketListener('postcardType', handlePostcardTypeSocket as (...args: unknown[]) => void)
+useSocketListener('location', handleLocationSocket as (...args: unknown[]) => void)
 
 onMounted(() => {
   initMap()

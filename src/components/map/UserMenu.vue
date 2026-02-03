@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
@@ -39,7 +39,7 @@ const options = [
   },
 ]
 
-const handleSelect = async (key) => {
+const handleSelect = async (key: string) => {
   switch (key) {
     case 'userInfo': {
       modalStates.value.userInfo = true

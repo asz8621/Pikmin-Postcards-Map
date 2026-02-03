@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/useMapStore'
@@ -24,7 +24,7 @@ const notFoundText = computed(() => {
 })
 
 // 紀錄已成功載入的圖片 URL，避免重複預載
-const loadedImages = ref(new Set())
+const loadedImages = ref(new Set<string>())
 
 // ✅ 加入圖片預載邏輯
 watch(mapData, (items) => {
@@ -40,7 +40,7 @@ watch(mapData, (items) => {
 })
 
 // 切換 Skeleton 與圖片顯示
-const isLoaded = (url) => loadedImages.value.has(url)
+const isLoaded = (url: string) => loadedImages.value.has(url)
 </script>
 
 <template>

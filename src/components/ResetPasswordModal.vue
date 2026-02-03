@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, useTemplateRef, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
@@ -21,9 +21,9 @@ const { userData } = storeToRefs(infoStore)
 
 const passwordFormRef = useTemplateRef('passwordFormRef')
 const passwordForm = ref({
-  passwordOld: null,
-  password: null,
-  confirmPassword: null,
+  passwordOld: '',
+  password: '',
+  confirmPassword: '',
 })
 
 const { oldPasswordRules, passwordRules, confirmPasswordRules, passwordWatch } =
@@ -44,9 +44,14 @@ const handleResetPassword = async () => {
     return
   }
 
-  const id = userData.value.id
+  const id = userData.value?.id
 
-  if (id === 1) {
+  if (!id) {
+    errorMsg('資料異常，請重新整理後再試')
+    return
+  }
+
+  if (Number(id) === 1) {
     errorMsg('Demo 帳號不能修改密碼')
     return
   }
@@ -76,11 +81,11 @@ watch(
   () => modalStates.value.resetPassword,
   (newVal, oldVal) => {
     if (oldVal && !newVal) {
-      Object.assign(passwordForm.value, {
-        passwordOld: null,
-        password: null,
-        confirmPassword: null,
-      })
+      passwordForm.value = {
+        passwordOld: '',
+        password: '',
+        confirmPassword: '',
+      }
       passwordFormRef.value?.restoreValidation()
     }
   },

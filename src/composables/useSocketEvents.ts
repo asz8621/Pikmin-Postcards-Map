@@ -10,16 +10,16 @@ interface PostcardType {
   name: string
 }
 
-type SocketPostcardPayload =
+export type SocketPostcardPayload =
   | { method: 'update'; data: PostcardType }
   | { method: 'delete'; data: { id: number } }
 
-type SocketLocationPayload =
+export type SocketLocationPayload =
   | { method: 'create'; data: LocationData }
   | { method: 'update'; data: LocationData }
   | { method: 'delete'; data: { id: number } }
 
-type SocketUserContributePayload = { data: LocationData } | { data: { id: number } }
+export type SocketUserContributePayload = { data: LocationData } | { data: { id: number } }
 
 export const useSocketEvents = () => {
   const socketStore = useSocketStore()

@@ -1,31 +1,35 @@
 export interface LoginData {
-  email: string
+  account: string
   password: string
 }
 
 export interface RegisterData {
+  name: string
+  account: string
   email: string
   password: string
-  name?: string
 }
 
 export interface ForgotPasswordData {
+  account: string
   email: string
 }
 
 export interface ResetPasswordData {
   token: string
+  email: string
+  account: string
   password: string
 }
 
 export interface PasswordData {
-  oldPassword: string
-  newPassword: string
+  passwordOld: string
+  password: string
 }
 
 export interface UserInfo {
-  id?: string
-  name?: string
+  id?: number
+  username?: string
   email?: string
   avatar?: string
 }
@@ -53,9 +57,10 @@ export interface Feature {
 }
 
 export interface ReportData {
-  locationId: string
-  reason: string
-  description?: string
+  description: string
+  user_id: number
+  report_types_id: number
+  location_id?: number
 }
 
 export interface SearchResult {

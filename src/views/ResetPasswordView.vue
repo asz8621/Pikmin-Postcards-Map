@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, useTemplateRef, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { authApi } from '@/services'
@@ -22,9 +22,9 @@ const loading = ref(false)
 const resetFormRef = useTemplateRef('resetFormRef')
 
 // 從 URL 參數獲取 token, email, account
-const token = ref('')
-const email = ref('')
-const account = ref('')
+const token = ref<string>('')
+const email = ref<string>('')
+const account = ref<string>('')
 
 const { passwordRules, confirmPasswordRules, passwordWatch } = usePasswordValidation(resetFormRef)
 
@@ -64,16 +64,21 @@ const validateUrlParams = () => {
   const urlEmail = route.query.email
   const urlAccount = route.query.account
 
-  if (!urlToken || !urlEmail || !urlAccount) {
+  // 檢查 URL 參數是否存在，並進行賦值
+  if (
+    typeof urlToken === 'string' &&
+    typeof urlEmail === 'string' &&
+    typeof urlAccount === 'string'
+  ) {
+    token.value = urlToken
+    email.value = urlEmail
+    account.value = urlAccount
+    return true
+  } else {
     errorMsg('無效的重設連結，請重新申請忘記密碼')
     router.push('/forgot-password')
     return false
   }
-
-  token.value = urlToken
-  email.value = urlEmail
-  account.value = urlAccount
-  return true
 }
 
 onMounted(() => {

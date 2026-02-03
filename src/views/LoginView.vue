@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
@@ -62,7 +62,7 @@ const generateRandomState = () => {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 }
 
-const initiateOAuth = (provider) => {
+const initiateOAuth = (provider: 'google' | 'facebook') => {
   if (loading.value) return
 
   loading.value = true

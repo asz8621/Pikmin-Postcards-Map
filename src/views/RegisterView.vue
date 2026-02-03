@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, useTemplateRef, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/services'
@@ -27,7 +27,7 @@ const loading = ref(false)
 
 const registerFormRef = useTemplateRef('registerFormRef')
 
-const validatePasswordSame = (rule, value) => {
+const validatePasswordSame = (_rule: unknown, value: string) => {
   return value === registerData.value.password
 }
 
@@ -91,7 +91,7 @@ const handlePasswordInput = async () => {
     try {
       await registerFormRef.value?.validate(
         () => {},
-        (rules) => {
+        (rules: { key?: string }) => {
           return rules?.key === 'confirmPassword'
         },
       )

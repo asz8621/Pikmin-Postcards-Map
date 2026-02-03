@@ -1,5 +1,6 @@
-<script setup>
+<script setup lang="ts">
 import { ref, useTemplateRef, computed, watch } from 'vue'
+import type { UploadCustomRequestOptions } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
@@ -9,6 +10,18 @@ import { useFileUpload } from '@/composables/useFileUpload'
 import { useCoordinates } from '@/composables/useCoordinates'
 import { useLocationForm } from '@/composables/useLocationForm'
 import { locationApi } from '@/services'
+
+interface LocationFormData {
+  id?: number
+  explore: boolean
+  image?: string
+  imageFile?: File | null
+  type: string
+  lat?: number
+  long?: number
+  coords: string
+  image_status?: string
+}
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
@@ -24,7 +37,12 @@ const { coordsRules, getCoordinates } = useCoordinates()
 const { typeOptions, typeChange, typeRules } = useLocationForm()
 
 const editLocationRef = useTemplateRef('editLocationRef')
-const locationFormData = ref({})
+const locationFormData = ref<LocationFormData>({
+  explore: false,
+  type: '',
+  coords: '',
+  imageFile: null,
+})
 
 const rules = computed(() => ({
   ...imageFileRules(locationFormData.value.image),
@@ -37,8 +55,8 @@ const submitText = computed(() => {
 })
 
 // 暫存圖片到表單資料
-const customUpload = ({ file, onFinish }) => {
-  locationFormData.value.imageFile = file.file
+const customUpload = ({ file, onFinish }: UploadCustomRequestOptions) => {
+  locationFormData.value.imageFile = file.file as File
   onFinish()
 }
 
@@ -48,7 +66,7 @@ const handleRemove = () => {
 }
 
 // 蘑菇禁止修改隱藏版
-const updateType = (type) => {
+const updateType = (type: 'flower' | 'mushroom') => {
   typeChange(locationFormData.value, type)
 }
 
@@ -65,7 +83,7 @@ const handleEditLocation = async () => {
   locationFormData.value.lat = lat
   locationFormData.value.long = long
 
-  const apiData = { ...locationFormData.value }
+  const apiData: Record<string, unknown> = { ...locationFormData.value }
   delete apiData.coords
 
   if (!apiData.imageFile) delete apiData.imageFile
@@ -80,7 +98,7 @@ const handleEditLocation = async () => {
   modalLoading.value = true
 
   try {
-    const res = await locationApi.updateLocation(apiData.id, formData)
+    const res = await locationApi.updateLocation(locationFormData.value.id as number, formData)
     await fetchUserData()
     successMsg(res?.data?.message || '更新成功')
     closeModal('editLocation')
@@ -110,7 +128,12 @@ watch(
       }
     }
     if (oldVal && !newVal) {
-      locationFormData.value = {}
+      locationFormData.value = {
+        explore: false,
+        type: '',
+        coords: '',
+        imageFile: null,
+      }
     }
   },
 )

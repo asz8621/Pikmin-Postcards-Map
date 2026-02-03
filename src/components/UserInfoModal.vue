@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, watch, useTemplateRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
@@ -17,15 +17,22 @@ const { userData } = storeToRefs(infoStore)
 
 const { handleError } = useApiError()
 
+interface UserInfoForm {
+  id?: number
+  username?: string
+  email?: string
+}
+
 const userInfoFormRef = useTemplateRef('userInfoFormRef')
-const userInfoForm = ref({
-  username: null,
-  email: null,
+const userInfoForm = ref<UserInfoForm>({
+  id: undefined,
+  username: undefined,
+  email: undefined,
 })
 
 const clearFormData = () => {
   Object.keys(userInfoForm.value).forEach((key) => {
-    userInfoForm.value[key] = null
+    userInfoForm.value[key as keyof UserInfoForm] = undefined
   })
 }
 
@@ -79,7 +86,13 @@ const handleUpdateUserInfo = async () => {
 watch(
   () => modalStates.value.userInfo,
   (newVal, oldVal) => {
-    if (newVal) userInfoForm.value = { ...userData.value }
+    if (newVal && userData.value) {
+      userInfoForm.value = {
+        id: userData.value.id,
+        username: userData.value.username,
+        email: userData.value.email,
+      }
+    }
     if (oldVal) clearFormData()
   },
 )

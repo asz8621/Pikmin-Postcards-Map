@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
@@ -12,8 +12,8 @@ const { typeOptions } = useLocationForm()
 
 const { typeFilter, featuresFilter, filterDrawer, applyFilter, resetFilter } = useMapFilter()
 
-const typeFilterTemp = ref(null)
-const featuresFilterTemp = ref([])
+const typeFilterTemp = ref<string | null>(null)
+const featuresFilterTemp = ref<number[]>([])
 
 watch(
   () => filterDrawer.value,

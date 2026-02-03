@@ -1,12 +1,15 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/useMapStore'
+import { useApiError } from '@/composables/useApiError'
 import { errorMsg } from '@/utils/appMessage'
 
 const mapStore = useMapStore()
 const { searchAddress: searchAddressAPI } = mapStore
 const { isSearch, searchResults } = storeToRefs(mapStore)
+
+const { handleError } = useApiError()
 
 const address = ref('')
 
@@ -21,12 +24,7 @@ const searchAddress = async () => {
       errorMsg('未找到相符的地點')
     }
   } catch (error) {
-    const errorMessage = error.response?.data?.message || error.message || '搜尋失敗，請稍後再試'
-    if (Array.isArray(errorMessage)) {
-      errorMessage.forEach((msg) => errorMsg(msg))
-    } else {
-      errorMsg(errorMessage)
-    }
+    handleError(error, '搜尋失敗，請稍後再試')
   }
 }
 </script>

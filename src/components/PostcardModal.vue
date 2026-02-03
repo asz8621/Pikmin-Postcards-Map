@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, h, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModalStore } from '@/stores/useModalStore'
@@ -11,7 +11,7 @@ const { openModal, closeModal } = modalStore
 const { modalData, modalStates } = storeToRefs(modalStore)
 
 const currentTime = ref(formatTimezone())
-let timer = null
+let timer: ReturnType<typeof setInterval> | null = null
 
 // 取得目前點位時間
 const updateLocationTime = () => {
@@ -41,7 +41,14 @@ const coordinates = computed(() => {
 })
 
 // n-image 預覽圖工具列
-const customToolbar = ({ nodes }) => {
+interface ToolbarNodes {
+  zoomIn: ReturnType<typeof h>
+  zoomOut: ReturnType<typeof h>
+  resizeToOriginalSize: ReturnType<typeof h>
+  close: ReturnType<typeof h>
+}
+
+const customToolbar = ({ nodes }: { nodes: ToolbarNodes }) => {
   const { zoomIn, zoomOut, resizeToOriginalSize, close } = nodes
   return h(
     'div',
@@ -58,7 +65,7 @@ const customToolbar = ({ nodes }) => {
 }
 
 // 複製經緯度
-const onCopy = (e) => successMsg(`複製成功: ${e.text}`)
+const onCopy = (e: { text: string }) => successMsg(`複製成功: ${e.text}`)
 const onError = () => errorMsg('複製失敗，請稍後再試！')
 </script>
 

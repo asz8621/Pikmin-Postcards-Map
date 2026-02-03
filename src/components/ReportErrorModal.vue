@@ -1,5 +1,5 @@
-<script setup>
-import { ref, watch, computed } from 'vue'
+<script setup lang="ts">
+import { ref, useTemplateRef, watch, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useModalStore } from '@/stores/useModalStore'
 import { useInfoStore } from '@/stores/useInfoStore'
@@ -24,13 +24,17 @@ const typeOptions = computed(() => {
       value: item.id,
     }))
 })
+interface FormData {
+  reportType: number | null
+  description: string
+}
 
-const formData = ref({
+const formData = ref<FormData>({
   reportType: null,
   description: '',
 })
 
-const formRef = ref(null)
+const formRef = useTemplateRef('formRef')
 
 const rules = {
   reportType: {
@@ -72,9 +76,9 @@ const handleSubmit = async () => {
 
     const payload = {
       description: formData.value.description,
-      user_id: userData.value?.id,
-      location_id: modalData.value?.id,
-      report_types_id: formData.value.reportType,
+      user_id: userData.value?.id as number,
+      location_id: modalData.value?.id as number,
+      report_types_id: formData.value.reportType as number,
     }
 
     await locationApi.reportError(payload)

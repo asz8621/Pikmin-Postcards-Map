@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useModalStore } from '@/stores/useModalStore'
 import { useInfoStore } from '@/stores/useInfoStore'
@@ -33,7 +33,7 @@ const handleDeleteLocation = async () => {
   try {
     const res = await locationApi.deleteLocation(modalData.value.id)
     await fetchUserData()
-    successMsg(res?.message || '刪除成功')
+    successMsg(res?.data.message || '刪除成功')
     closeModal('deleteLocation')
   } catch (err) {
     handleError(err, '刪除失敗，請稍後再試')

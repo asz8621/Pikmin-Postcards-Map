@@ -1,5 +1,5 @@
-<script setup>
-import { ref } from 'vue'
+<script setup lang="ts">
+import { ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/services'
 import AuthLayout from '@/components/AuthLayout.vue'
@@ -18,7 +18,7 @@ const forgotData = ref({
 })
 
 const loading = ref(false)
-const forgotFormRef = ref(null)
+const forgotFormRef = useTemplateRef('forgotFormRef')
 
 const rules = {
   account: [
