@@ -29,7 +29,7 @@ export const useModalStore = defineStore('modal', () => {
   // 用來關閉指定的 modal
   const closeModal = (modalName: ModalName) => {
     modalStates.value[modalName] = false
-    modalData.value = null
+    if (modalName !== 'reportError') modalData.value = null
   }
 
   // 用來關閉所有的 modal
