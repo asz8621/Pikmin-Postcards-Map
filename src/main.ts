@@ -11,11 +11,13 @@ import VueClipboard from 'vue3-clipboard'
 import SvgIcon from './components/SvgIcon.vue'
 import 'virtual:svg-icons-register'
 import '@/assets/css/tailwind.css'
+import i18n from './plugins/i18n'
 
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
+app.use(i18n) // 在 Pinia 和 Router 之後註冊
 app.use(naive)
 app.use(VueClipboard, {
   autoSetContainer: true,
