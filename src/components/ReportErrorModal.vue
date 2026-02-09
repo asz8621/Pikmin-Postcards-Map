@@ -5,6 +5,7 @@ import { useModalStore } from '@/stores/useModalStore'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { locationApi } from '@/services'
 import { successMsg } from '@/utils/appMessage'
+import { useLanguage } from '@/composables/useLanguage'
 import { useApiError } from '@/composables/useApiError'
 
 const modalStore = useModalStore()
@@ -13,6 +14,8 @@ const { modalData, modalStates, modalLoading } = storeToRefs(modalStore)
 
 const infoStore = useInfoStore()
 const { userData, reportTypes } = storeToRefs(infoStore)
+
+const { t } = useLanguage()
 
 const { handleError } = useApiError()
 
@@ -36,19 +39,19 @@ const formData = ref<FormData>({
 
 const formRef = useTemplateRef('formRef')
 
-const rules = {
+const rules = computed(() => ({
   reportType: {
     required: true,
     type: 'number',
-    message: '請選擇錯誤類型',
+    message: t('validation.requiredErrorType'),
     trigger: 'change',
   },
   description: {
     required: true,
-    message: '請輸入問題描述',
+    message: t('validation.requiredDescription'),
     trigger: 'blur',
   },
-}
+}))
 
 // 重置表單
 const resetForm = () => {
@@ -82,10 +85,10 @@ const handleSubmit = async () => {
     }
 
     await locationApi.reportError(payload)
-    successMsg('感謝您的回報，我們會盡快處理！')
+    successMsg(t('message.reportErrorSuccess'))
     closeModal('reportError')
   } catch (err) {
-    handleError(err, '回報失敗，請稍後再試')
+    handleError(err, t('message.reportErrorFailed'))
   } finally {
     modalLoading.value = false
   }
@@ -99,23 +102,23 @@ const handleSubmit = async () => {
     :autoFocus="false"
     :close-on-esc="false"
     preset="card"
-    title="回報錯誤"
+    :title="t('modal.reportError')"
     style="max-width: 500px"
   >
     <n-form ref="formRef" :model="formData" :rules="rules" label-placement="top">
-      <n-form-item label="錯誤類型" path="reportType">
+      <n-form-item :label="t('common.errorType')" path="reportType">
         <n-select
           v-model:value="formData.reportType"
           :options="typeOptions"
-          placeholder="請選擇錯誤類型"
+          :placeholder="t('validation.requiredErrorType')"
         />
       </n-form-item>
 
-      <n-form-item label="問題描述" path="description">
+      <n-form-item :label="t('common.description')" path="description">
         <n-input
           v-model:value="formData.description"
           type="textarea"
-          placeholder="請詳細描述您發現的問題..."
+          :placeholder="t('validation.detailedDescription')"
           :rows="5"
           :maxlength="500"
           show-count
@@ -132,7 +135,7 @@ const handleSubmit = async () => {
           :disabled="modalLoading"
           @click="handleSubmit"
         >
-          送出
+          {{ t('common.submit') }}
         </n-button>
         <n-button
           secondary
@@ -140,7 +143,7 @@ const handleSubmit = async () => {
           :disabled="modalLoading"
           @click="closeModal('reportError')"
         >
-          關閉
+          {{ t('common.close') }}
         </n-button>
       </div>
     </template>

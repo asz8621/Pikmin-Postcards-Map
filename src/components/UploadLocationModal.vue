@@ -8,6 +8,7 @@ import { useApiError } from '@/composables/useApiError'
 import { useFileUpload } from '@/composables/useFileUpload'
 import { useCoordinates } from '@/composables/useCoordinates'
 import { useLocationForm } from '@/composables/useLocationForm'
+import { useLanguage } from '@/composables/useLanguage'
 import { successMsg } from '@/utils/appMessage'
 import { locationApi } from '@/services'
 
@@ -34,6 +35,8 @@ const { imageFileRules, beforeUpload, buildFormData } = useFileUpload()
 const { coordsRules, getCoordinates } = useCoordinates()
 const { typeOptions, typeChange, typeRules } = useLocationForm()
 
+const { t } = useLanguage()
+
 const uploadLocationFormRef = useTemplateRef('uploadLocationFormRef')
 const locationFormData = ref<UploadFormData>({
   image: null,
@@ -43,11 +46,11 @@ const locationFormData = ref<UploadFormData>({
   explore: false,
 })
 
-const rules = {
+const rules = computed(() => ({
   ...imageFileRules(),
-  ...typeRules(),
+  ...typeRules(t('validation.requiredType')),
   ...coordsRules(),
-}
+}))
 
 const fileListClass = computed(() => {
   return locationFormData.value.imageFile ? 'uploaded-image-list has-file' : 'uploaded-image-list'
@@ -107,12 +110,12 @@ const handleUploadLocation = async () => {
   modalLoading.value = true
 
   try {
-    const res = await locationApi.createLocation(formData as FormData, 30000)
-    successMsg(res.data.message || '上傳成功')
+    await locationApi.createLocation(formData as FormData, 30000)
+    successMsg(t('message.upload'))
     closeModal('uploadLocation')
     await fetchUserData()
   } catch (err) {
-    handleError(err, '上傳失敗，請稍後再試')
+    handleError(err, t('message.uploadFailed'))
   } finally {
     modalLoading.value = false
   }
@@ -136,7 +139,7 @@ watch(
     :closable="false"
     :show-icon="false"
     preset="dialog"
-    title="上傳點位"
+    :title="t('modal.uploadLocation')"
   >
     <n-form
       ref="uploadLocationFormRef"
@@ -148,13 +151,15 @@ watch(
     >
       <n-form-item path="imageFile">
         <template #label>
-          <span>上傳圖片</span>
+          <span>{{ t('common.uploadImage') }}</span>
           <n-popover placement="bottom" trigger="click">
             <template #trigger>
-              <span class="text-xs cursor-pointer text-indigo-500 ml-1"> 範例 </span>
+              <span class="text-xs cursor-pointer text-indigo-500 ml-1">
+                {{ t('common.example') }}
+              </span>
             </template>
             <div>
-              <p class="mb-2">直接手機截圖即可，如下圖：</p>
+              <p class="mb-2">{{ t('modal.uploadLocationExample') }}</p>
               <img
                 src="@/assets/images/upload_example.png"
                 alt="upload example"
@@ -172,30 +177,33 @@ watch(
           :on-before-upload="beforeUpload"
           :on-remove="handleRemove"
         >
-          <n-button>上傳圖片</n-button>
+          <n-button>{{ t('common.uploadImage') }}</n-button>
         </n-upload>
       </n-form-item>
 
-      <n-form-item label="類型" path="type">
+      <n-form-item :label="t('common.type')" path="type">
         <n-select
           v-model:value="locationFormData.type"
           :options="typeOptions"
-          placeholder="請選擇類型"
+          :placeholder="t('validation.requiredType')"
           @update:value="updateType"
         />
       </n-form-item>
 
-      <n-form-item label="座標" path="coords">
-        <n-input v-model:value="locationFormData.coords" placeholder="輸入座標" />
+      <n-form-item :label="t('common.coords')" path="coords">
+        <n-input
+          v-model:value="locationFormData.coords"
+          :placeholder="t('validation.requiredCoords')"
+        />
       </n-form-item>
 
-      <n-form-item label="隱藏版" path="explore">
+      <n-form-item :label="t('common.explore')" path="explore">
         <n-switch
           v-model:value="locationFormData.explore"
           :disabled="locationFormData.type === 'mushroom'"
         >
-          <template #checked> 是 </template>
-          <template #unchecked> 否 </template>
+          <template #checked> {{ t('common.yes') }} </template>
+          <template #unchecked> {{ t('common.no') }} </template>
         </n-switch>
       </n-form-item>
 
@@ -206,7 +214,7 @@ watch(
           :loading="modalLoading"
           @click="handleUploadLocation"
         >
-          送出
+          {{ t('common.submit') }}
         </n-button>
         <n-button
           type="tertiary"
@@ -214,7 +222,7 @@ watch(
           :disabled="modalLoading"
           @click="closeModal('uploadLocation')"
         >
-          關閉
+          {{ t('common.close') }}
         </n-button>
       </n-space>
     </n-form>

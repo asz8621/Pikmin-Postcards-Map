@@ -3,9 +3,11 @@ import { ref } from 'vue'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useMapStore } from '@/stores/useMapStore'
 import { useLoadingStore } from '@/stores/useLoadingStore'
+import { useLanguage } from '@/composables/useLanguage'
 import LeafletMap from '@/components/map/LeafletMap.vue'
 import SearchBox from '@/components/map/SearchBox.vue'
 import UserMenu from '@/components/map/UserMenu.vue'
+import LanguageBar from '@/components/LanguageBar.vue'
 import LightboxStrip from '@/components/map/LightboxStrip.vue'
 import PostcardModal from '@/components/PostcardModal.vue'
 import ResetPasswordModal from '@/components/ResetPasswordModal.vue'
@@ -24,6 +26,8 @@ const { fetchMapData } = mapStore
 const loadingStore = useLoadingStore()
 const { closeAppLoading } = loadingStore
 
+const { t } = useLanguage()
+
 const isDataReady = ref(false)
 
 Promise.all([fetchUserData(), fetchMapData()])
@@ -31,7 +35,7 @@ Promise.all([fetchUserData(), fetchMapData()])
     isDataReady.value = true
   })
   .catch((err) => {
-    errorMsg(err.response?.data?.message || '資料載入失敗')
+    errorMsg(t('message.dataLoadFailed'))
   })
   .finally(() => {
     closeAppLoading()
@@ -40,6 +44,12 @@ Promise.all([fetchUserData(), fetchMapData()])
 
 <template>
   <n-layout class="relative h-full">
+    <div
+      class="absolute top-4 right-16 z-10 size-10 flex justify-center items-center cursor-pointer"
+    >
+      <LanguageBar />
+    </div>
+
     <SearchBox />
 
     <UserMenu />

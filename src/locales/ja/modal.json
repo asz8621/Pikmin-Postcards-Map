@@ -1,0 +1,10 @@
+{
+  "updateUserInfo": "個人情報の更新",
+  "uploadLocation": "場所をアップロード",
+  "editLocation": "場所の編集",
+  "uploadLocationExample": "以下のように、携帯電話でスクリーンショットを撮るだけです。",
+  "changePassword": "パスワードを変更",
+  "reportError": "エラーを報告",
+  "postcardInfo": "ポストカード情報",
+  "deleteLocation": "場所の削除"
+}

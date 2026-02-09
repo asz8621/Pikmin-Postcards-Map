@@ -1,19 +1,22 @@
 <script setup lang="ts">
-import { ref, watch, useTemplateRef } from 'vue'
+import { ref, watch, useTemplateRef, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
+import { useLanguage } from '@/composables/useLanguage'
 import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import { userApi } from '@/services'
 
 const modalStore = useModalStore()
 const { closeModal } = modalStore
-const { modalStates, modalLoading, validateErrorMsg } = storeToRefs(modalStore)
+const { modalStates, modalLoading } = storeToRefs(modalStore)
 
 const infoStore = useInfoStore()
 const { setUserData } = infoStore
 const { userData } = storeToRefs(infoStore)
+
+const { t } = useLanguage()
 
 const { handleError } = useApiError()
 
@@ -36,33 +39,32 @@ const clearFormData = () => {
   })
 }
 
-const userInfoRules = {
-  username: [{ required: true, message: '請輸入暱稱', trigger: 'blur' }],
+const userInfoRules = computed(() => ({
+  username: [{ required: true, message: t('validation.requiredName'), trigger: 'blur' }],
   email: [
-    { required: true, message: '請輸入信箱', trigger: 'blur' },
-    { type: 'email', message: '請輸入有效的信箱格式', trigger: ['blur', 'input'] },
+    { required: true, message: t('validation.requiredEmail'), trigger: 'blur' },
+    { type: 'email', message: t('validation.invalidEmail'), trigger: ['blur', 'input'] },
   ],
-}
+}))
 
 const handleUpdateUserInfo = async () => {
   if (modalLoading.value) return
 
-  const id = userInfoForm.value.id
-
-  if (!id) {
-    errorMsg('資料異常，請重新整理後再試')
-    return
-  }
-
   try {
     await userInfoFormRef.value?.validate()
   } catch {
-    errorMsg(validateErrorMsg.value)
+    return
+  }
+
+  const id = userInfoForm.value.id
+
+  if (!id) {
+    errorMsg(t('message.dataError'))
     return
   }
 
   if (id === 1) {
-    errorMsg('Demo 帳號不能修改暱稱')
+    errorMsg(t('message.demoAccount'))
     return
   }
 
@@ -73,10 +75,10 @@ const handleUpdateUserInfo = async () => {
     const { data } = res.data
     setUserData(data)
 
-    successMsg(res?.data?.message || '修改成功')
+    successMsg(t('message.modify'))
     closeModal('userInfo')
   } catch (err) {
-    handleError(err, '修改失敗，請稍後再試')
+    handleError(err, t('message.modifyFailed'))
   } finally {
     modalLoading.value = false
   }
@@ -104,7 +106,7 @@ watch(
     :mask-closable="false"
     :closable="false"
     preset="card"
-    title="修改個人資料"
+    :title="t('modal.updateUserInfo')"
   >
     <n-form
       ref="userInfoFormRef"
@@ -114,11 +116,14 @@ watch(
       :disabled="modalLoading"
       @keydown.enter.prevent="handleUpdateUserInfo"
     >
-      <n-form-item label="暱稱" path="username">
-        <n-input v-model:value="userInfoForm.username" placeholder="請輸入暱稱" />
+      <n-form-item :label="t('common.nickname')" path="username">
+        <n-input
+          v-model:value="userInfoForm.username"
+          :placeholder="t('validation.requiredName')"
+        />
       </n-form-item>
-      <n-form-item label="信箱" path="email">
-        <n-input v-model:value="userInfoForm.email" placeholder="請輸入信箱" />
+      <n-form-item :label="t('common.email')" path="email">
+        <n-input v-model:value="userInfoForm.email" :placeholder="t('validation.requiredEmail')" />
       </n-form-item>
     </n-form>
 
@@ -130,7 +135,7 @@ watch(
           :loading="modalLoading"
           @click="handleUpdateUserInfo"
         >
-          送出
+          {{ t('common.submit') }}
         </n-button>
         <n-button
           type="tertiary"
@@ -138,7 +143,7 @@ watch(
           :disabled="modalLoading"
           @click="closeModal('userInfo')"
         >
-          關閉
+          {{ t('common.close') }}
         </n-button>
       </n-space>
     </template>

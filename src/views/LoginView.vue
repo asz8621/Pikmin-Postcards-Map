@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, useTemplateRef } from 'vue'
+import { ref, useTemplateRef, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
 import { authApi } from '@/services'
@@ -8,6 +8,7 @@ import FormInput from '@/components/FormInput.vue'
 import SocialLogin from '@/components/SocialLogin.vue'
 import { useApiError } from '@/composables/useApiError'
 import { useSocketEvents } from '@/composables/useSocketEvents'
+import { useLanguage } from '@/composables/useLanguage'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 
 const router = useRouter()
@@ -16,19 +17,25 @@ const { handleError } = useApiError()
 
 const { joinRoom } = useSocketEvents()
 
+const { t, locale } = useLanguage()
+
 const loginData = ref({
   account: '',
   password: '',
 })
-
 const loading = ref(false)
 const formLoading = ref(false)
-
 const loginFormRef = useTemplateRef('loginFormRef')
-const rules = {
-  account: [{ required: true, message: '請輸入帳號', trigger: 'blur' }],
-  password: [{ required: true, message: '請輸入密碼', trigger: 'blur' }],
-}
+
+const rules = computed(() => ({
+  account: [{ required: true, message: t('validation.requiredAccount'), trigger: 'blur' }],
+  password: [{ required: true, message: t('validation.requiredPassword'), trigger: 'blur' }],
+}))
+
+// 監聽語系變化，清除所有驗證錯誤訊息
+watch(locale, () => {
+  loginFormRef.value?.restoreValidation()
+})
 
 const login = async () => {
   try {
@@ -45,13 +52,13 @@ const login = async () => {
     const token = res.data.data.token
     if (token) {
       Cookies.set('token', token, { expires: 1 })
-      successMsg(res.data.message)
+      successMsg(t('message.login'))
       router.push('/map')
     } else {
-      errorMsg('登入失敗：無法驗證用戶')
+      errorMsg(t('message.loginFailedInvalidUser'))
     }
   } catch (err) {
-    handleError(err, '登入錯誤，請聯絡管理員')
+    handleError(err, t('message.loginError'))
   } finally {
     loading.value = false
     formLoading.value = false
@@ -61,6 +68,8 @@ const login = async () => {
 const generateRandomState = () => {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 }
+
+const capitalizeFirstLetter = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 
 const initiateOAuth = (provider: 'google' | 'facebook') => {
   if (loading.value) return
@@ -76,7 +85,7 @@ const initiateOAuth = (provider: 'google' | 'facebook') => {
     const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3006/api/v1'
     window.location.href = `${backendUrl}/auth/${provider}?state=${state}`
   } catch (error) {
-    errorMsg(`${provider === 'google' ? 'Google' : 'Facebook'} 登入錯誤: ${error}`)
+    errorMsg(`${capitalizeFirstLetter(provider)} ${t('message.loginError')} [${error}]`)
     loading.value = false
   }
 }
@@ -97,19 +106,24 @@ onMounted(() => {
       :show-require-mark="false"
       @keydown.enter.prevent="login"
     >
-      <FormInput v-model="loginData.account" path="account" placeholder="請輸入帳號" icon="user" />
+      <FormInput
+        v-model="loginData.account"
+        path="account"
+        :placeholder="t('validation.requiredAccount')"
+        icon="user"
+      />
 
       <FormInput
         v-model="loginData.password"
         path="password"
         type="password"
-        placeholder="請輸入密碼"
+        :placeholder="t('validation.requiredPassword')"
         icon="key"
         show-password-on="click"
       />
 
       <n-button type="primary" block :loading="formLoading" :disabled="loading" @click="login">
-        登入
+        {{ t('auth.login') }}
       </n-button>
     </n-form>
 
@@ -121,10 +135,10 @@ onMounted(() => {
         :disabled="loading"
         @click="router.push('/forgot-password')"
       >
-        忘記密碼？
+        {{ t('auth.forgotPassword') }}
       </n-button>
       <n-button type="text" size="small" :disabled="loading" @click="router.push('/register')">
-        註冊帳號
+        {{ t('auth.registerNow') }}
       </n-button>
     </div>
 

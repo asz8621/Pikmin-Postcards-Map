@@ -20,7 +20,7 @@ const goHome = () => {
         <n-text type="primary" class="nosifer-regular">4 0 4</n-text>
       </h1>
       <n-button type="primary" class="font-bold btn-responsive" @click="goHome">
-        回到首頁
+        {{ $t('auth.backToHome') }}
       </n-button>
     </div>
   </div>

@@ -2,12 +2,15 @@
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/useMapStore'
+import { useLanguage } from '@/composables/useLanguage'
 import { useApiError } from '@/composables/useApiError'
 import { errorMsg } from '@/utils/appMessage'
 
 const mapStore = useMapStore()
 const { searchAddress: searchAddressAPI } = mapStore
 const { isSearch, searchResults } = storeToRefs(mapStore)
+
+const { t } = useLanguage()
 
 const { handleError } = useApiError()
 
@@ -21,17 +24,17 @@ const searchAddress = async () => {
 
     // 檢查是否有搜尋結果
     if (!searchResults.value?.result?.place_id) {
-      errorMsg('未找到相符的地點')
+      errorMsg(t('message.locationNotFound'))
     }
   } catch (error) {
-    handleError(error, '搜尋失敗，請稍後再試')
+    handleError(error, t('message.searchFailed'))
   }
 }
 </script>
 
 <template>
   <div
-    class="absolute top-4 left-4 z-10 w-[calc(100%-5rem)] sm:w-[calc(100%-6rem)] md:w-[320px] mr-auto transition-width duration-500"
+    class="absolute top-4 left-4 z-10 w-[calc(100%-9rem)] md:w-[480px] mr-auto transition-width duration-500"
   >
     <n-input
       v-model:value="address"
@@ -39,7 +42,7 @@ const searchAddress = async () => {
       clearable
       size="large"
       class="searchInput pr-6"
-      placeholder="地址、國家、座標"
+      :placeholder="t('validation.requiredSearch')"
       @keyup.enter="searchAddress"
     >
       <template #clear-icon>

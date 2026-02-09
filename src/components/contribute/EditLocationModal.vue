@@ -9,6 +9,7 @@ import { successMsg, errorMsg } from '@/utils/appMessage'
 import { useFileUpload } from '@/composables/useFileUpload'
 import { useCoordinates } from '@/composables/useCoordinates'
 import { useLocationForm } from '@/composables/useLocationForm'
+import { useLanguage } from '@/composables/useLanguage'
 import { locationApi } from '@/services'
 
 interface LocationFormData {
@@ -35,6 +36,7 @@ const { handleError } = useApiError()
 const { imageFileRules, beforeUpload, buildFormData } = useFileUpload()
 const { coordsRules, getCoordinates } = useCoordinates()
 const { typeOptions, typeChange, typeRules } = useLocationForm()
+const { t } = useLanguage()
 
 const editLocationRef = useTemplateRef('editLocationRef')
 const locationFormData = ref<LocationFormData>({
@@ -46,12 +48,14 @@ const locationFormData = ref<LocationFormData>({
 
 const rules = computed(() => ({
   ...imageFileRules(locationFormData.value.image),
-  ...typeRules(),
+  ...typeRules(t('validation.requiredType')),
   ...coordsRules(),
 }))
 
 const submitText = computed(() => {
-  return locationFormData.value.image_status === 'rejected' ? '重新送審' : '送出'
+  return locationFormData.value.image_status === 'rejected'
+    ? t('common.resubmit')
+    : t('common.submit')
 })
 
 // 暫存圖片到表單資料
@@ -91,19 +95,19 @@ const handleEditLocation = async () => {
   const formData = await buildFormData(apiData)
 
   if (apiData.id === 1) {
-    errorMsg('Demo 資料無法更新，請自行新增資料後再操作')
+    errorMsg(t('message.demoDataUpdateFailed'))
     return
   }
 
   modalLoading.value = true
 
   try {
-    const res = await locationApi.updateLocation(locationFormData.value.id as number, formData)
+    await locationApi.updateLocation(locationFormData.value.id as number, formData)
     await fetchUserData()
-    successMsg(res?.data?.message || '更新成功')
+    successMsg(t('message.update'))
     closeModal('editLocation')
   } catch (err) {
-    handleError(err, '更新失敗，請稍後再試')
+    handleError(err, t('message.updateFailed'))
   } finally {
     modalLoading.value = false
   }
@@ -146,7 +150,7 @@ watch(
     :closable="false"
     :show-icon="false"
     preset="dialog"
-    title="修改點位"
+    :title="t('modal.editLocation')"
   >
     <n-form
       ref="editLocationRef"
@@ -158,13 +162,15 @@ watch(
     >
       <n-form-item path="imageFile">
         <template #label>
-          <span>上傳圖片</span>
+          <span>{{ t('common.uploadImage') }}</span>
           <n-popover placement="bottom" trigger="click">
             <template #trigger>
-              <span class="text-xs cursor-pointer text-indigo-500 ml-1"> 範例 </span>
+              <span class="text-xs cursor-pointer text-indigo-500 ml-1">
+                {{ t('common.example') }}
+              </span>
             </template>
             <div>
-              <p class="mb-2">直接手機截圖即可，如下圖：</p>
+              <p class="mb-2">{{ t('modal.uploadLocationExample') }}</p>
               <img
                 src="@/assets/images/upload_example.png"
                 alt="upload example"
@@ -182,30 +188,33 @@ watch(
           :on-before-upload="beforeUpload"
           :on-remove="handleRemove"
         >
-          <n-button>重新上傳圖片</n-button>
+          <n-button>{{ t('common.reuploadImage') }}</n-button>
         </n-upload>
       </n-form-item>
 
-      <n-form-item label="類型" path="type">
+      <n-form-item :label="t('common.type')" path="type">
         <n-select
           v-model:value="locationFormData.type"
           :options="typeOptions"
-          placeholder="請選擇類型"
+          :placeholder="t('validation.requiredType')"
           @update:value="updateType"
         />
       </n-form-item>
 
-      <n-form-item label="座標" path="coords">
-        <n-input v-model:value="locationFormData.coords" placeholder="輸入座標" />
+      <n-form-item :label="t('common.coords')" path="coords">
+        <n-input
+          v-model:value="locationFormData.coords"
+          :placeholder="t('validation.requiredCoords')"
+        />
       </n-form-item>
 
-      <n-form-item label="隱藏版" path="explore">
+      <n-form-item :label="t('common.explore')" path="explore">
         <n-switch
           v-model:value="locationFormData.explore"
           :disabled="locationFormData.type === 'mushroom'"
         >
-          <template #checked> 是 </template>
-          <template #unchecked> 否 </template>
+          <template #checked> {{ t('common.yes') }} </template>
+          <template #unchecked> {{ t('common.no') }} </template>
         </n-switch>
       </n-form-item>
 
@@ -224,7 +233,7 @@ watch(
           :disabled="modalLoading"
           @click="closeModal('editLocation')"
         >
-          關閉
+          {{ t('common.cancel') }}
         </n-button>
       </n-space>
     </n-form>

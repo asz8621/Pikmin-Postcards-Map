@@ -4,11 +4,14 @@ import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useMapFilter } from '@/composables/useMapFilter'
 import { useLocationForm } from '@/composables/useLocationForm'
+import { useLanguage } from '@/composables/useLanguage'
 
 const infoStore = useInfoStore()
 const { features } = storeToRefs(infoStore)
 
 const { typeOptions } = useLocationForm()
+
+const { t } = useLanguage()
 
 const { typeFilter, featuresFilter, filterDrawer, applyFilter, resetFilter } = useMapFilter()
 
@@ -47,17 +50,17 @@ const handleReset = () => {
     :close-on-esc="false"
     :mask-closable="false"
   >
-    <n-drawer-content title="篩選明信片" closable>
+    <n-drawer-content :title="t('common.filterPostcard')" closable>
       <n-form>
-        <n-form-item path="type" label="類型">
+        <n-form-item path="type" :label="t('common.type')">
           <n-select
             v-model:value="typeFilterTemp"
             :options="typeOptions"
-            placeholder="選擇類型"
+            :placeholder="t('validation.requiredType')"
             clearable
           />
         </n-form-item>
-        <n-form-item path="features" label="標籤">
+        <n-form-item path="features" :label="t('common.features')">
           <n-select
             v-model:value="featuresFilterTemp"
             :options="features"
@@ -66,14 +69,18 @@ const handleReset = () => {
             multiple
             filterable
             clearable
-            placeholder="選擇標籤"
+            :placeholder="t('validation.requiredFeatures')"
           />
         </n-form-item>
       </n-form>
 
       <div class="flex gap-2">
-        <n-button class="flex-1" @click="handleReset">重置</n-button>
-        <n-button type="primary" class="flex-1" @click="handleApply">確認</n-button>
+        <n-button class="flex-1" @click="handleReset">
+          {{ t('common.reset') }}
+        </n-button>
+        <n-button type="primary" class="flex-1" @click="handleApply">
+          {{ t('common.confirm') }}
+        </n-button>
       </div>
     </n-drawer-content>
   </n-drawer>

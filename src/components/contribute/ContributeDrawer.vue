@@ -6,6 +6,7 @@ import { useInfoStore } from '@/stores/useInfoStore'
 import EditLocationModal from '@/components/contribute/EditLocationModal.vue'
 import DeleteLocationModal from '@/components/contribute/DeleteLocationModal.vue'
 import { useSocketEvents } from '@/composables/useSocketEvents'
+import { useLanguage } from '@/composables/useLanguage'
 import { getTypeIcon } from '@/utils/typeIcon'
 
 const infoStore = useInfoStore()
@@ -16,6 +17,8 @@ const { openModal, closeModal } = modalStore
 const { modalStates } = storeToRefs(modalStore)
 
 const { useSocketListener, handleUserContribute } = useSocketEvents()
+
+const { t } = useLanguage()
 
 useSocketListener('info', handleUserContribute as (...args: unknown[]) => void)
 
@@ -28,9 +31,9 @@ const filteredContribute = computed(() => {
 const checkStrategyAlert = computed(() => {
   switch (checkStrategy.value) {
     case 'pending':
-      return '人工審核大約 <strong>1~3 天</strong>，請耐心等候，謝謝'
+      return t('message.pendingReviewTip')
     case 'rejected':
-      return '駁回的資料將不定期清除，如果有誤判請盡快重新上傳資料'
+      return t('message.rejectedDataTip')
     default:
       return ''
   }
@@ -39,11 +42,11 @@ const checkStrategyAlert = computed(() => {
 type ImageStatus = 'approved' | 'pending' | 'rejected'
 
 const statusMap: Record<ImageStatus, { text: string; type: string }> = {
-  approved: { text: '已通過', type: 'success' },
-  pending: { text: '審核中', type: 'warning' },
-  rejected: { text: '駁回', type: 'error' },
+  approved: { text: t('common.approved'), type: 'success' },
+  pending: { text: t('common.pending'), type: 'warning' },
+  rejected: { text: t('common.rejected'), type: 'error' },
 }
-const getStatusText = (status: ImageStatus) => statusMap[status]?.text || '狀態異常'
+const getStatusText = (status: ImageStatus) => statusMap[status]?.text || t('common.statusError')
 const getStatusType = (status: ImageStatus) => statusMap[status]?.type || 'default'
 
 const onDrawerShowChange = (show: boolean) => {
@@ -64,12 +67,20 @@ const onDrawerShowChange = (show: boolean) => {
     :mask-closable="false"
     @update:show="onDrawerShowChange"
   >
-    <n-drawer-content title="我的貢獻" closable body-content-class="!p-2 sm:!p-4">
+    <n-drawer-content :title="t('common.myContribute')" closable body-content-class="!p-2 sm:!p-4">
       <n-radio-group v-model:value="checkStrategy" class="flex w-full">
-        <n-radio-button value="all" class="flex-1 text-center">全部</n-radio-button>
-        <n-radio-button value="approved" class="flex-1 text-center">已通過</n-radio-button>
-        <n-radio-button value="pending" class="flex-1 text-center">審核中</n-radio-button>
-        <n-radio-button value="rejected" class="flex-1 text-center">駁回</n-radio-button>
+        <n-radio-button value="all" class="flex-1 text-center">
+          {{ t('common.all') }}
+        </n-radio-button>
+        <n-radio-button value="approved" class="flex-1 text-center">
+          {{ t('common.approved') }}
+        </n-radio-button>
+        <n-radio-button value="pending" class="flex-1 text-center">
+          {{ t('common.pending') }}
+        </n-radio-button>
+        <n-radio-button value="rejected" class="flex-1 text-center">
+          {{ t('common.rejected') }}
+        </n-radio-button>
       </n-radio-group>
 
       <n-space v-if="filteredContribute.length > 0" vertical class="my-4">
@@ -114,7 +125,7 @@ const onDrawerShowChange = (show: boolean) => {
 
                 <div v-if="item.rejected_text">
                   <div class="bg-red-100 border border-red-300 text-sm mt-2 p-2 rounded">
-                    駁回原因：{{ item.rejected_text }}
+                    {{ t('common.rejectedText') }}：{{ item.rejected_text }}
                   </div>
                 </div>
               </div>
@@ -148,7 +159,7 @@ const onDrawerShowChange = (show: boolean) => {
       <n-empty
         v-else
         class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-        description="查無資料"
+        :description="t('common.noData')"
       />
     </n-drawer-content>
 

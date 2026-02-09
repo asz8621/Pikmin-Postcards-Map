@@ -3,8 +3,11 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
 import { successMsg, errorMsg } from '@/utils/appMessage'
+import { useLanguage } from '@/composables/useLanguage'
 import { useApiError } from '@/composables/useApiError'
 import { authApi } from '@/services'
+
+const { t } = useLanguage()
 
 const { handleError } = useApiError()
 
@@ -21,17 +24,18 @@ onMounted(() => {
   if (error) {
     // 錯誤訊息對應表
     const errorMessages: Record<string, string> = {
-      google_oauth_init_failed: 'Google OAuth 初始化失敗',
-      facebook_oauth_init_failed: 'Facebook OAuth 初始化失敗',
-      google_code_error: 'Google 授權碼錯誤',
-      facebook_code_error: 'Facebook 授權碼錯誤',
-      google_state_error: 'Google 狀態驗證錯誤',
-      facebook_state_error: 'Facebook 狀態驗證錯誤',
-      google_oauth_callback_failed: 'Google OAuth 回調失敗',
-      facebook_oauth_callback_failed: 'Facebook OAuth 回調失敗',
+      google_oauth_init_failed: t('message.googleOauthInitFailed'),
+      facebook_oauth_init_failed: t('message.facebookOauthInitFailed'),
+      google_code_error: t('message.googleCodeError'),
+      facebook_code_error: t('message.facebookCodeError'),
+      google_state_error: t('message.googleStateError'),
+      facebook_state_error: t('message.facebookStateError'),
+      google_oauth_callback_failed: t('message.googleOauthCallbackFailed'),
+      facebook_oauth_callback_failed: t('message.facebookOauthCallbackFailed'),
     }
 
-    const errorMessage = errorMessages[error] || decodeURIComponent(error) || '登入失敗'
+    const errorMessage =
+      errorMessages[error] || decodeURIComponent(error) || t('message.loginFailed')
     errorMsg(errorMessage)
     router.push('/login')
     return
@@ -39,14 +43,14 @@ onMounted(() => {
 
   // State 不匹配，可能是 CSRF 攻擊
   if (returnedState !== storedState) {
-    errorMsg('驗證錯誤，請重新登入')
+    errorMsg(t('message.validationError'))
     localStorage.removeItem('oauth_state')
     router.push('/login')
     return
   }
 
   if (!token) {
-    errorMsg('登入失敗：無法取得 token')
+    errorMsg(t('message.loginFailedInvalidUser'))
     router.push('/login')
     return
   }
@@ -58,10 +62,10 @@ onMounted(() => {
 const checkToken = async () => {
   try {
     await authApi.checkUserToken()
-    successMsg('登入成功')
+    successMsg(t('message.login'))
     router.push('/map')
   } catch (err) {
-    handleError(err, '驗證失敗，請重新登入')
+    handleError(err, t('message.validationError'))
     router.push('/login')
   } finally {
     // 清除已使用的 state

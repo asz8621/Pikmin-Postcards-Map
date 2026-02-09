@@ -42,7 +42,7 @@ export const useSocketStore = defineStore('socket', () => {
     // 連接錯誤
     socket.value.on('connect_error', (error) => {
       isConnected.value = false
-      errorMsg(`連線錯誤: ${error.message}`)
+      errorMsg(`Connection error: ${error.message}`)
     })
 
     // 斷線
@@ -51,14 +51,14 @@ export const useSocketStore = defineStore('socket', () => {
 
       // 只在非正常斷線時顯示警告
       if (reason !== 'io client disconnect' && reason !== 'io server disconnect') {
-        warningMsg(`連線中斷: ${reason}`)
+        warningMsg(`Connection interrupted: ${reason}`)
       }
     })
 
     // 重連成功
     socket.value.on('reconnect', () => {
       isConnected.value = true
-      successMsg('連線已恢復')
+      successMsg('Connection restored')
     })
   }
 

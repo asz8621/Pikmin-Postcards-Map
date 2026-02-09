@@ -1,6 +1,5 @@
-import { watch, nextTick, type Ref } from 'vue'
+import { watch, nextTick, computed, type Ref } from 'vue'
 import type { FormInst, FormItemRule } from 'naive-ui'
-
 interface FormData {
   password: string
   passwordOld?: string
@@ -9,9 +8,13 @@ interface FormData {
 
 export function usePasswordValidation(formRef: Ref<FormInst | null>) {
   // 通用密碼驗證器
-  const createBasePasswordValidator = (label: string): FormItemRule[] => [
-    { required: true, message: `請輸入${label}`, trigger: 'blur' },
-    { min: 8, message: `${label}長度至少 8 個字符`, trigger: ['input', 'blur'] },
+  const createBasePasswordValidator = (
+    requiredText: string,
+    minText: string,
+    validatorText: string,
+  ): FormItemRule[] => [
+    { required: true, message: requiredText, trigger: 'blur' },
+    { min: 8, message: minText, trigger: ['input', 'blur'] },
     {
       validator: (_rule: FormItemRule, value: string) => {
         if (!value) return true
@@ -19,40 +22,32 @@ export function usePasswordValidation(formRef: Ref<FormInst | null>) {
         const hasNumber = /\d/.test(value)
         return hasLetter && hasNumber
       },
-      message: `${label}必須至少包含字母與數字`,
+      message: validatorText,
       trigger: ['input', 'blur'],
     },
   ]
 
-  // 舊密碼驗證規則
-  const oldPasswordRules = () => ({
-    passwordOld: createBasePasswordValidator('舊密碼'),
-  })
-
-  // 新密碼驗證規則
-  const passwordRules = () => ({
-    password: createBasePasswordValidator('新密碼'),
-  })
-
   // 確認密碼驗證規則
-  const confirmPasswordRules = (formData: FormData) => ({
-    confirmPassword: [
-      {
-        required: true,
-        message: '請輸入確認新密碼',
-        trigger: ['input', 'blur'],
+  const confirmPasswordRules = (
+    formData: FormData,
+    requiredText: string,
+    mismatchText: string,
+  ): FormItemRule[] => [
+    {
+      required: true,
+      message: requiredText,
+      trigger: ['input', 'blur'],
+    },
+    {
+      key: 'confirmPassword',
+      validator: (_rule: FormItemRule, value: string) => {
+        if (!value) return true
+        return value === formData.password
       },
-      {
-        key: 'confirmPassword',
-        validator: (_rule: FormItemRule, value: string) => {
-          if (!value) return true
-          return value === formData.password
-        },
-        message: '兩次輸入的密碼不一致',
-        trigger: ['input', 'blur'],
-      },
-    ],
-  })
+      message: mismatchText,
+      trigger: ['input', 'blur'],
+    },
+  ]
 
   // 密碼變更監聽器
   const passwordWatch = (formData: FormData) => {
@@ -69,9 +64,8 @@ export function usePasswordValidation(formRef: Ref<FormInst | null>) {
   }
 
   return {
-    oldPasswordRules,
-    passwordRules,
     confirmPasswordRules,
     passwordWatch,
+    createBasePasswordValidator,
   }
 }

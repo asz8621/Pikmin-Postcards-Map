@@ -1,5 +1,6 @@
 import type { UploadFileInfo } from 'naive-ui'
 import { errorMsg } from '@/utils/appMessage'
+import { useLanguage } from '@/composables/useLanguage'
 
 interface FileUploadOptions {
   maxSizeMB?: number
@@ -14,6 +15,8 @@ interface UploadFile extends UploadFileInfo {
 
 // 檔案上傳與處理相關的 composable
 export const useFileUpload = (options: FileUploadOptions = {}) => {
+  const { t } = useLanguage()
+
   const {
     maxSizeMB = 5,
     allowedTypes = ['image/png', 'image/jpeg'],
@@ -43,32 +46,32 @@ export const useFileUpload = (options: FileUploadOptions = {}) => {
     if (!file && imageUrl) return true // 沒重新上傳不驗證(編輯用)
 
     if (!file) {
-      return new Error('請上傳圖片')
+      return new Error(t('message.uploadImage'))
     }
 
     const { size, type, name } = file
 
     if (!name || !type) {
-      return new Error('檔案資訊錯誤')
+      return new Error(t('message.fileInfoError'))
     }
 
     if (!allowedTypes.includes(type)) {
-      return new Error('只能上傳 PNG 或 JPG 圖片')
+      return new Error(t('message.invalidFileType'))
     }
 
     if (size > maxSizeBytes) {
-      return new Error(`圖片大小不可超過 ${maxSizeMB}MB`)
+      return new Error(t('message.fileSizeExceeded', { maxSizeMB }))
     }
 
     return true
   }
 
-  // 上傳前驗證
+  // 上傳前驗證`
   const beforeUpload = (uploadData: { file: UploadFileInfo }) => {
     const file = uploadData?.file?.file as File | undefined
 
     if (!file) {
-      errorMsg('檔案資訊錯誤')
+      errorMsg(t('message.fileInfoError'))
       return false
     }
 
@@ -114,7 +117,7 @@ export const useFileUpload = (options: FileUploadOptions = {}) => {
         canvas.height = height
 
         const ctx = canvas.getContext('2d')
-        if (!ctx) return reject('無法取得畫布上下文')
+        if (!ctx) return reject(t('message.canvasError'))
 
         // 背景改白色（防止 PNG 透明變黑）
         ctx.fillStyle = 'white'
@@ -124,7 +127,7 @@ export const useFileUpload = (options: FileUploadOptions = {}) => {
 
         canvas.toBlob(
           (blob) => {
-            if (!blob) return reject('轉換失敗')
+            if (!blob) return reject(t('message.conversionFailed'))
             const newFile = new File([blob], file.name.replace(/\.\w+$/, '.jpg'), {
               type: 'image/jpeg',
             })

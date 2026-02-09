@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/useMapStore'
 import { useModalStore } from '@/stores/useModalStore'
+import { useLanguage } from '@/composables/useLanguage'
 
 const mapStore = useMapStore()
 const { mapData, isFiltered } = storeToRefs(mapStore)
@@ -10,17 +11,19 @@ const { mapData, isFiltered } = storeToRefs(mapStore)
 const modalStore = useModalStore()
 const { openModal } = modalStore
 
+const { t } = useLanguage()
+
 const openLightbox = ref(true)
 
 const tabPosition = computed(() => (openLightbox.value ? 'bottom-[100px]' : 'bottom-0'))
 const stripPosition = computed(() => (openLightbox.value ? 'bottom-0' : '-bottom-[100px]'))
 
 const modeText = computed(() => {
-  return isFiltered.value ? '篩選模式' : '一般模式'
+  return isFiltered.value ? t('common.filterMode') : t('common.generalMode')
 })
 
 const notFoundText = computed(() => {
-  return isFiltered.value ? '篩選不到任何的景點，請放寬標準' : '附近沒有好看的景點'
+  return isFiltered.value ? t('message.noFilterResults') : t('message.noNearbyAttractions')
 })
 
 // 紀錄已成功載入的圖片 URL，避免重複預載

@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { ref, useTemplateRef, onMounted } from 'vue'
+import { ref, useTemplateRef, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { authApi } from '@/services'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import { useApiError } from '@/composables/useApiError'
 import { usePasswordValidation } from '@/composables/usePasswordValidation'
+import { useLanguage } from '@/composables/useLanguage'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 
 const router = useRouter()
 const route = useRoute()
+
+const { t } = useLanguage()
 
 const { handleError } = useApiError()
 
@@ -26,12 +29,21 @@ const token = ref<string>('')
 const email = ref<string>('')
 const account = ref<string>('')
 
-const { passwordRules, confirmPasswordRules, passwordWatch } = usePasswordValidation(resetFormRef)
+const { createBasePasswordValidator, confirmPasswordRules, passwordWatch } =
+  usePasswordValidation(resetFormRef)
 
-const rules = {
-  ...passwordRules(),
-  ...confirmPasswordRules(resetData.value),
-}
+const rules = computed(() => ({
+  password: createBasePasswordValidator(
+    t('validation.requiredNewPassword'),
+    t('validation.minNewPassword'),
+    t('validation.invalidNewPassword'),
+  ),
+  confirmPassword: confirmPasswordRules(
+    resetData.value,
+    t('validation.requiredConfirmNewPassword'),
+    t('validation.passwordMismatch'),
+  ),
+}))
 
 passwordWatch(resetData.value)
 
@@ -41,18 +53,18 @@ const resetPassword = async () => {
 
     loading.value = true
 
-    const res = await authApi.resetForgotPassword({
+    await authApi.resetForgotPassword({
       token: token.value,
       email: email.value,
       account: account.value,
       password: resetData.value.password,
     })
 
-    successMsg(res.data.message || '密碼重設成功！請使用新密碼登入')
+    successMsg(t('message.passwordResetSuccess'))
 
     router.push('/login')
   } catch (err) {
-    handleError(err, '重設密碼失敗，請聯絡管理員')
+    handleError(err, t('message.passwordResetError'))
   } finally {
     loading.value = false
   }
@@ -75,7 +87,7 @@ const validateUrlParams = () => {
     account.value = urlAccount
     return true
   } else {
-    errorMsg('無效的重設連結，請重新申請忘記密碼')
+    errorMsg(t('message.passwordResetInvalidLink'))
     router.push('/forgot-password')
     return false
   }
@@ -89,12 +101,12 @@ onMounted(() => {
 <template>
   <AuthLayout>
     <div class="text-center mb-6">
-      <h2 class="text-xl font-semibold text-gray-700 mb-2">重設密碼</h2>
+      <h2 class="text-xl font-semibold text-gray-700 mb-2">{{ t('auth.resetPassword') }}</h2>
       <p class="text-sm text-gray-500">
-        帳號：<span class="font-medium text-gray-700">{{ account }}</span>
+        {{ t('auth.account') }}：<span class="font-medium text-gray-700">{{ account }}</span>
       </p>
       <p class="text-sm text-gray-500">
-        信箱：<span class="font-medium text-gray-700">{{ email }}</span>
+        {{ t('auth.email') }}：<span class="font-medium text-gray-700">{{ email }}</span>
       </p>
     </div>
 
@@ -111,7 +123,7 @@ onMounted(() => {
         v-model="resetData.password"
         path="password"
         type="password"
-        placeholder="請輸入新密碼"
+        :placeholder="t('validation.requiredNewPassword')"
         icon="key"
         show-password-on="click"
       />
@@ -120,7 +132,7 @@ onMounted(() => {
         v-model="resetData.confirmPassword"
         path="confirmPassword"
         type="password"
-        placeholder="請再次輸入新密碼"
+        :placeholder="t('validation.requiredConfirmNewPasswordAgain')"
         icon="key"
         show-password-on="click"
       />
@@ -133,13 +145,13 @@ onMounted(() => {
         @click="resetPassword"
         class="mb-4"
       >
-        重設密碼
+        {{ t('auth.resetPassword') }}
       </n-button>
     </n-form>
 
     <div class="text-center">
       <n-button type="text" size="small" :disabled="loading" @click="router.push('/login')">
-        返回登入頁面
+        {{ t('auth.backToLogin') }}
       </n-button>
     </div>
   </AuthLayout>

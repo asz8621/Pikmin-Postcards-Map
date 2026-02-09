@@ -18,8 +18,6 @@ export const useModalStore = defineStore('modal', () => {
     reportError: false,
   })
 
-  const validateErrorMsg = ref('請確認資料是否填寫齊全無誤')
-
   // 用來開啟指定的 modal
   const openModal = (modalName: ModalName, data: any = null) => {
     modalStates.value[modalName] = true
@@ -45,7 +43,6 @@ export const useModalStore = defineStore('modal', () => {
     modalLoading,
     modalStates,
     modalData,
-    validateErrorMsg,
     openModal,
     closeModal,
     closeAllModals,

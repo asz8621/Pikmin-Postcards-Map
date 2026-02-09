@@ -1,0 +1,10 @@
+{
+  "updateUserInfo": "修改個人資料",
+  "uploadLocation": "上傳點位",
+  "editLocation": "修改點位",
+  "uploadLocationExample": "直接手機截圖即可，如下圖：",
+  "changePassword": "修改密碼",
+  "reportError": "回報錯誤",
+  "postcardInfo": "明信片資訊",
+  "deleteLocation": "刪除點位"
+}

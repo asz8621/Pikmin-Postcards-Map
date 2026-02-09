@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { ref, useTemplateRef, watch } from 'vue'
+import { ref, useTemplateRef, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useAuthFlow } from '@/composables/useAuthFlow'
 import { useApiError } from '@/composables/useApiError'
 import { usePasswordValidation } from '@/composables/usePasswordValidation'
+import { useLanguage } from '@/composables/useLanguage'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import { userApi } from '@/services'
 
 const { signOut } = useAuthFlow()
+
+const { t } = useLanguage()
+
 const { handleError } = useApiError()
 
 const modalStore = useModalStore()
@@ -26,14 +30,26 @@ const passwordForm = ref({
   confirmPassword: '',
 })
 
-const { oldPasswordRules, passwordRules, confirmPasswordRules, passwordWatch } =
+const { confirmPasswordRules, passwordWatch, createBasePasswordValidator } =
   usePasswordValidation(passwordFormRef)
 
-const formRules = {
-  ...oldPasswordRules(),
-  ...passwordRules(),
-  ...confirmPasswordRules(passwordForm.value),
-}
+const formRules = computed(() => ({
+  passwordOld: createBasePasswordValidator(
+    t('validation.requiredOldPassword'),
+    t('validation.minOldPassword'),
+    t('validation.invalidOldPassword'),
+  ),
+  password: createBasePasswordValidator(
+    t('validation.requiredNewPassword'),
+    t('validation.minNewPassword'),
+    t('validation.invalidNewPassword'),
+  ),
+  confirmPassword: confirmPasswordRules(
+    passwordForm.value,
+    t('validation.requiredConfirmNewPassword'),
+    t('validation.passwordMismatch'),
+  ),
+}))
 
 const handleResetPassword = async () => {
   if (modalLoading.value) return
@@ -47,12 +63,12 @@ const handleResetPassword = async () => {
   const id = userData.value?.id
 
   if (!id) {
-    errorMsg('資料異常，請重新整理後再試')
+    errorMsg(t('message.dataError'))
     return
   }
 
   if (Number(id) === 1) {
-    errorMsg('Demo 帳號不能修改密碼')
+    errorMsg(t('message.demoAccount'))
     return
   }
 
@@ -63,12 +79,12 @@ const handleResetPassword = async () => {
       passwordOld: passwordForm.value.passwordOld,
       password: passwordForm.value.password,
     }
-    const res = await userApi.resetPassword(id, requestData)
-    successMsg(res.data.message || '密碼修改成功，請重新登入')
+    await userApi.resetPassword(id, requestData)
+    successMsg(t('message.passwordChangeSuccess'))
     closeModal('resetPassword')
     signOut()
   } catch (err) {
-    handleError(err, '修改失敗，請稍後再試')
+    handleError(err, t('message.modifyFailed'))
   } finally {
     modalLoading.value = false
   }
@@ -98,8 +114,9 @@ watch(
     :mask-closable="false"
     :closable="false"
     preset="card"
-    title="修改密碼"
+    :title="t('modal.changePassword')"
   >
+    {{ formRules }}
     <n-form
       ref="passwordFormRef"
       :model="passwordForm"
@@ -108,27 +125,27 @@ watch(
       :disabled="modalLoading"
       @keydown.enter.prevent="handleResetPassword"
     >
-      <n-form-item label="舊密碼" path="passwordOld">
+      <n-form-item :label="t('common.oldPassword')" path="passwordOld">
         <n-input
           v-model:value="passwordForm.passwordOld"
           type="password"
-          placeholder="請輸入舊密碼"
+          :placeholder="t('validation.requiredOldPassword')"
           show-password-on="click"
         />
       </n-form-item>
-      <n-form-item label="新密碼" path="password">
+      <n-form-item :label="t('common.newPassword')" path="password">
         <n-input
           v-model:value="passwordForm.password"
           type="password"
-          placeholder="請輸入新密碼 (至少8位，包含字母和數字)"
+          :placeholder="t('validation.requiredNewPassword')"
           show-password-on="click"
         />
       </n-form-item>
-      <n-form-item label="確認新密碼" path="confirmPassword">
+      <n-form-item :label="t('common.confirmNewPassword')" path="confirmPassword">
         <n-input
           v-model:value="passwordForm.confirmPassword"
           type="password"
-          placeholder="請再次輸入新密碼"
+          :placeholder="t('validation.requiredConfirmNewPassword')"
           show-password-on="click"
         />
       </n-form-item>
@@ -142,7 +159,7 @@ watch(
           :loading="modalLoading"
           @click="handleResetPassword"
         >
-          送出
+          {{ t('common.submit') }}
         </n-button>
         <n-button
           type="tertiary"
@@ -150,7 +167,7 @@ watch(
           :disabled="modalLoading"
           @click="closeModal('resetPassword')"
         >
-          關閉
+          {{ t('common.close') }}
         </n-button>
       </n-space>
     </template>

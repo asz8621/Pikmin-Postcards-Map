@@ -12,7 +12,7 @@ defineEmits(['facebook-login', 'google-login'])
 <template>
   <div>
     <n-divider style="--n-color: #646464; --n-text-color: #646464" class="!mt-0">
-      快速登入
+      {{ $t('auth.quickLogin') }}
     </n-divider>
 
     <div class="flex justify-center items-center gap-6">

@@ -73,7 +73,6 @@ export const useSocketEvents = () => {
 
   // 使用者的貢獻處理
   const handleUserContribute = (socketData: SocketUserContributePayload) => {
-    console.log('handleUserContribute', socketData)
     const { data } = socketData
 
     if ('name' in data) {

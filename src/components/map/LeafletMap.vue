@@ -10,6 +10,7 @@ import {
 } from '@/composables/useSocketEvents'
 import { useLeafletMap } from '@/composables/useLeafletMap'
 import { useMapFilter } from '@/composables/useMapFilter'
+import { useLanguage } from '@/composables/useLanguage'
 import FilterDrawer from '@/components/map/FilterDrawer.vue'
 
 const mapStore = useMapStore()
@@ -26,6 +27,8 @@ const { initMap, currentLocation, cleanupMap, isLocating } = useLeafletMap({
 })
 
 const { openFilterDrawer } = useMapFilter()
+
+const { t } = useLanguage()
 
 // 類型 socket 處理
 const handlePostcardTypeSocket = (socketData: SocketPostcardPayload) => {
@@ -65,7 +68,7 @@ onBeforeUnmount(() => {
         <SvgIcon name="location" />
       </div>
     </template>
-    <div class="large-text">我的位置</div>
+    <div class="large-text">{{ t('common.myLocation') }}</div>
   </n-popover>
 
   <!-- 篩選抽屜 Icon -->
@@ -75,27 +78,27 @@ onBeforeUnmount(() => {
         <SvgIcon name="filter" />
       </div>
     </template>
-    <div class="large-text">篩選</div>
+    <div class="large-text">{{ t('common.filter') }}</div>
   </n-popover>
 
   <!-- zoom Icon -->
   <div class="zoomControls">
-    <n-popover placement="left" trigger="hover" class="responsivePopover" ref="zoomPopover">
+    <n-popover placement="left" trigger="hover" class="responsivePopover">
       <template #trigger>
         <div class="zoomIcon" @click="zoomIn">
           <SvgIcon name="plus" />
         </div>
       </template>
-      <div class="large-text">放大</div>
+      <div class="large-text">{{ t('common.zoomIn') }}</div>
     </n-popover>
 
-    <n-popover placement="left" trigger="hover" class="responsivePopover" ref="zoomPopoverOut">
+    <n-popover placement="left" trigger="hover" class="responsivePopover">
       <template #trigger>
         <div class="zoomIcon" @click="zoomOut">
           <SvgIcon name="horizontal" />
         </div>
       </template>
-      <div class="large-text">缩小</div>
+      <div class="large-text">{{ t('common.zoomOut') }}</div>
     </n-popover>
   </div>
 

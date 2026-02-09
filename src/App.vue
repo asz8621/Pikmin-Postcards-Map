@@ -5,6 +5,7 @@ import { useLoadingStore } from '@/stores/useLoadingStore'
 import { useMapStore } from '@/stores/useMapStore'
 import { useSocketEvents } from '@/composables/useSocketEvents'
 import { useViewportHeight } from '@/composables/useViewportHeight'
+import { useLanguage } from '@/composables/useLanguage'
 import { useRoute } from 'vue-router'
 
 const loadingStore = useLoadingStore()
@@ -14,6 +15,8 @@ const mapStore = useMapStore()
 const { isLocated } = storeToRefs(mapStore)
 
 const { initSocket } = useSocketEvents()
+
+const { t } = useLanguage()
 
 const route = useRoute()
 
@@ -27,9 +30,9 @@ const showLoading = computed(() => {
 
 const loadingText = computed(() => {
   if (isAppLoading.value) {
-    return '加載中，請稍後'
+    return t('message.loading')
   } else {
-    return '正在取得您的位置...'
+    return t('message.gettingLocation')
   }
 })
 

@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue'
+import { ref, useTemplateRef, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/services'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import AuthFooterTip from '@/components/AuthFooterTip.vue'
 import { useApiError } from '@/composables/useApiError'
+import { useLanguage } from '@/composables/useLanguage'
 import { successMsg } from '@/utils/appMessage'
 
 const router = useRouter()
 
 const { handleError } = useApiError()
+
+const { t } = useLanguage()
 
 const forgotData = ref({
   account: '',
@@ -20,16 +23,16 @@ const forgotData = ref({
 const loading = ref(false)
 const forgotFormRef = useTemplateRef('forgotFormRef')
 
-const rules = {
+const rules = computed(() => ({
   account: [
-    { required: true, message: '請輸入帳號', trigger: 'blur' },
-    { min: 3, max: 20, message: '帳號長度須在 3 到 20 個字元之間', trigger: ['blur', 'input'] },
+    { required: true, message: t('validation.requiredAccount'), trigger: 'blur' },
+    { min: 6, max: 20, message: t('validation.accountLength'), trigger: ['blur', 'input'] },
   ],
   email: [
-    { required: true, message: '請輸入信箱', trigger: 'blur' },
-    { type: 'email', message: '請輸入有效的信箱格式', trigger: ['blur', 'input'] },
+    { required: true, message: t('validation.requiredEmail'), trigger: 'blur' },
+    { type: 'email', message: t('validation.invalidEmail'), trigger: ['blur', 'input'] },
   ],
-}
+}))
 
 const sendResetEmail = async () => {
   try {
@@ -42,11 +45,11 @@ const sendResetEmail = async () => {
       email: forgotData.value.email,
     })
 
-    successMsg(res.data.message || '密碼重設郵件已發送，請檢查您的信箱')
+    successMsg(t('message.passwordResetEmailSent'))
 
     router.push('/login')
   } catch (err) {
-    handleError(err, '發送失敗，請聯絡管理員')
+    handleError(err, t('message.passwordResetEmailFailed'))
   } finally {
     loading.value = false
   }
@@ -56,8 +59,8 @@ const sendResetEmail = async () => {
 <template>
   <AuthLayout>
     <div class="text-center mb-6">
-      <h2 class="text-xl font-semibold text-gray-700 mb-2">忘記密碼</h2>
-      <p class="text-sm text-gray-500">請輸入您的帳號與信箱，我們將發送重設密碼的連結給您</p>
+      <h2 class="text-xl font-semibold text-gray-700 mb-2">{{ t('auth.forgotPassword') }}</h2>
+      <p class="text-sm text-gray-500">{{ t('auth.forgotPasswordDescription') }}</p>
     </div>
 
     <n-form
@@ -69,9 +72,19 @@ const sendResetEmail = async () => {
       :show-require-mark="false"
       @keydown.enter.prevent="sendResetEmail"
     >
-      <FormInput v-model="forgotData.account" path="account" placeholder="請輸入帳號" icon="user" />
+      <FormInput
+        v-model="forgotData.account"
+        path="account"
+        :placeholder="t('validation.requiredAccount')"
+        icon="user"
+      />
 
-      <FormInput v-model="forgotData.email" path="email" placeholder="請輸入信箱" icon="email" />
+      <FormInput
+        v-model="forgotData.email"
+        path="email"
+        :placeholder="t('validation.requiredEmail')"
+        icon="email"
+      />
 
       <n-button
         type="primary"
@@ -81,13 +94,13 @@ const sendResetEmail = async () => {
         @click="sendResetEmail"
         class="mb-4"
       >
-        發送重設連結
+        {{ t('auth.sendResetLink') }}
       </n-button>
     </n-form>
 
     <AuthFooterTip
-      tip-text="想起密碼了？"
-      button-text="返回登入"
+      :tip-text="t('auth.rememberPassword')"
+      :button-text="t('auth.backToLogin')"
       route-to="/login"
       :disabled="loading"
     />

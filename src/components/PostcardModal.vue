@@ -5,6 +5,9 @@ import { useModalStore } from '@/stores/useModalStore'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import { formatTimezone } from '@/utils/formatDate'
 import { getTypeIcon } from '@/utils/typeIcon'
+import { useLanguage } from '@/composables/useLanguage'
+
+const { t } = useLanguage()
 
 const modalStore = useModalStore()
 const { openModal, closeModal } = modalStore
@@ -65,8 +68,8 @@ const customToolbar = ({ nodes }: { nodes: ToolbarNodes }) => {
 }
 
 // 複製經緯度
-const onCopy = (e: { text: string }) => successMsg(`複製成功: ${e.text}`)
-const onError = () => errorMsg('複製失敗，請稍後再試！')
+const onCopy = (e: { text: string }) => successMsg(`${t('message.copySuccess')}: ${e.text}`)
+const onError = () => errorMsg(t('message.copyFailed'))
 </script>
 
 <template>
@@ -86,7 +89,7 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
           height="24"
           class="mr-2"
         />
-        <h3 class="text-base font-bold">明信片資訊</h3>
+        <h3 class="text-base font-bold">{{ t('modal.postcardInfo') }}</h3>
       </div>
     </template>
 
@@ -108,12 +111,12 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
         </div>
 
         <div class="flex flex-col">
-          <span>時間</span>
+          <span>{{ t('common.time') }}</span>
           <span>{{ currentTime }}</span>
         </div>
 
         <div class="flex flex-col">
-          <span>位置</span>
+          <span>{{ t('common.location') }}</span>
           <div class="flex items-center">
             <span>{{ modalData?.lat }}, {{ modalData?.long }}</span>
             <n-button
@@ -136,9 +139,11 @@ const onError = () => errorMsg('複製失敗，請稍後再試！')
     <template #footer>
       <div class="flex gap-2">
         <n-button type="primary" ghost class="flex-1" @click="openModal('reportError')">
-          回報錯誤
+          {{ t('modal.reportError') }}
         </n-button>
-        <n-button secondary class="flex-1" @click="closeModal('postcard')">關閉</n-button>
+        <n-button secondary class="flex-1" @click="closeModal('postcard')">
+          {{ t('common.close') }}
+        </n-button>
       </div>
     </template>
   </n-modal>

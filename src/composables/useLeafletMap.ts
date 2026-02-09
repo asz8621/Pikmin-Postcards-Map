@@ -4,6 +4,7 @@ import type { LocationEvent, ErrorEvent } from 'leaflet'
 import 'leaflet.markercluster'
 import { useModalStore } from '@/stores/useModalStore'
 import { useMapStore } from '@/stores/useMapStore'
+import { useLanguage } from '@/composables/useLanguage'
 import { storeToRefs } from 'pinia'
 import { warningMsg, errorMsg } from '@/utils/appMessage'
 import type { LocationData } from '@/types'
@@ -58,6 +59,8 @@ const debounce = <T extends (...args: unknown[]) => void>(fn: T, delay: number) 
 }
 
 export const useLeafletMap = (options: { containerId?: string } = {}) => {
+  const { t, locale } = useLanguage()
+
   const { containerId } = options
 
   const modalStore = useModalStore()
@@ -76,7 +79,7 @@ export const useLeafletMap = (options: { containerId?: string } = {}) => {
   const initMap = () => {
     try {
       if (!containerId) {
-        errorMsg('地圖 ID 未提供')
+        errorMsg(t('message.mapIdNotProvided'))
         return
       }
 
@@ -107,7 +110,21 @@ export const useLeafletMap = (options: { containerId?: string } = {}) => {
       // 初始定位
       instance.locate(locateOptions)
     } catch (error) {
-      errorMsg(`地圖載入失敗: ${error}`)
+      errorMsg(`${t('message.mapLoadFailed')}: ${error}`)
+    }
+  }
+
+  // 更新位置標記的 popup 內容
+  const updateLocationPopup = () => {
+    if (locationMarker.value) {
+      const popup = locationMarker.value.getPopup()
+      if (popup) {
+        popup.setContent(t('common.currentLocation'))
+        // 如果 popup 是開啟的，則更新顯示
+        if (popup.isOpen()) {
+          popup.update()
+        }
+      }
     }
   }
 
@@ -122,7 +139,7 @@ export const useLeafletMap = (options: { containerId?: string } = {}) => {
     }
 
     const marker = L.marker(e.latlng, { icon: mapIcons.location })
-    marker.addTo(leafletMap).bindPopup('您的位置')
+    marker.addTo(leafletMap).bindPopup(t('common.currentLocation')).openPopup()
     locationMarker.value = marker
 
     // 移動到使用者位置
@@ -142,16 +159,16 @@ export const useLeafletMap = (options: { containerId?: string } = {}) => {
 
   // 處理定位錯誤
   const handleLocationError = (error: ErrorEvent) => {
-    let message = '無法取得您的位置，使用預設座標'
+    let message = t('message.locationUnavailable')
     switch (error.code) {
       case 1: // PERMISSION_DENIED
-        message = '定位權限被拒絕，請在瀏覽器設定中允許定位權限'
+        message = t('message.locationPermissionDenied')
         break
       case 2: // POSITION_UNAVAILABLE
-        message = '無法取得位置資訊，請確認您的裝置定位功能已開啟'
+        message = t('message.locationInfoUnavailable')
         break
       case 3: // TIMEOUT
-        message = '定位請求逾時，請檢查網路連線'
+        message = t('message.locationRequestTimeout')
         break
     }
 
@@ -200,7 +217,7 @@ export const useLeafletMap = (options: { containerId?: string } = {}) => {
   const renderMarkers = (data: LocationData[]) => {
     const leafletMap = map.value
     if (!leafletMap) {
-      errorMsg('地圖未初始化，標記載入失敗')
+      errorMsg(t('message.mapNotInitialized'))
       return
     }
 
@@ -222,7 +239,7 @@ export const useLeafletMap = (options: { containerId?: string } = {}) => {
 
       leafletMap.addLayer(clusterGroup)
     } catch (error) {
-      errorMsg(`標記載入失敗: ${error}`)
+      errorMsg(`${t('message.markerLoadFailed')}: ${error}`)
     }
   }
 
@@ -277,6 +294,14 @@ export const useLeafletMap = (options: { containerId?: string } = {}) => {
     isLocated.value = false
     isLocating.value = false
   }
+
+  // 監聽語言變化
+  watch(
+    () => locale.value,
+    () => {
+      updateLocationPopup()
+    },
+  )
 
   watch(
     () => mapData.value,

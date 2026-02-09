@@ -1,0 +1,10 @@
+{
+  "updateUserInfo": "개인 정보 수정",
+  "uploadLocation": "위치 업로드",
+  "editLocation": "위치 수정",
+  "uploadLocationExample": "아래와 같이 휴대폰에서 스크린샷을 찍으세요.",
+  "changePassword": "비밀번호 변경",
+  "reportError": "오류 신고",
+  "postcardInfo": "엽서 정보",
+  "deleteLocation": "위치 삭제"
+}

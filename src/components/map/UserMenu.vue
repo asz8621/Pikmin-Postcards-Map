@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useAuthFlow } from '@/composables/useAuthFlow'
 import { useApiError } from '@/composables/useApiError'
+import { useLanguage } from '@/composables/useLanguage'
 import { successMsg } from '@/utils/appMessage'
 import { authApi } from '@/services'
 
 const { signOut } = useAuthFlow()
 const { handleError } = useApiError()
+const { t } = useLanguage()
 
 const infoStore = useInfoStore()
 const { userData } = storeToRefs(infoStore)
@@ -16,28 +19,28 @@ const { userData } = storeToRefs(infoStore)
 const modalStore = useModalStore()
 const { modalStates } = storeToRefs(modalStore)
 
-const options = [
+const options = computed(() => [
   {
-    label: '個人資料',
+    label: t('menu.userInfo'),
     key: 'userInfo',
   },
   {
-    label: '我的貢獻',
+    label: t('menu.contribute'),
     key: 'contribute',
   },
   {
-    label: '上傳點位',
+    label: t('menu.uploadLocation'),
     key: 'uploadLocation',
   },
   {
-    label: '修改密碼',
+    label: t('menu.changePassword'),
     key: 'changePassword',
   },
   {
-    label: '登出',
+    label: t('menu.logout'),
     key: 'logout',
   },
-]
+])
 
 const handleSelect = async (key: string) => {
   switch (key) {
@@ -67,10 +70,10 @@ const handleSelect = async (key: string) => {
 // 登出
 const handleLogout = async () => {
   try {
-    const res = await authApi.userLogout()
-    successMsg(res.data.message)
+    await authApi.userLogout()
+    successMsg(t('message.logout'))
   } catch (err) {
-    handleError(err, '操作異常，請稍後再試')
+    handleError(err, t('message.operationFailed'))
   } finally {
     signOut()
   }
@@ -78,9 +81,7 @@ const handleLogout = async () => {
 </script>
 
 <template>
-  <div
-    class="absolute top-4 right-4 z-10 size-8 sm:size-9 flex justify-center items-center cursor-pointer"
-  >
+  <div class="absolute top-4 right-4 z-10 size-10 flex justify-center items-center cursor-pointer">
     <n-dropdown
       v-if="userData"
       trigger="click"

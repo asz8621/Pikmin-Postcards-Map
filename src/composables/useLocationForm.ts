@@ -1,12 +1,17 @@
+import { computed } from 'vue'
+import { useLanguage } from '@/composables/useLanguage'
+
 export const useLocationForm = () => {
+  const { t } = useLanguage()
+
   type FormData = { explore: boolean; [key: string]: unknown }
   type LocationType = 'flower' | 'mushroom'
 
   // 類型選項
-  const typeOptions = [
-    { label: '花', value: 'flower' },
-    { label: '蘑菇', value: 'mushroom' },
-  ]
+  const typeOptions = computed(() => [
+    { label: t('common.flower'), value: 'flower' },
+    { label: t('common.mushroom'), value: 'mushroom' },
+  ])
 
   // 蘑菇禁止修改隱藏版
   const typeChange = (formData: FormData, type: LocationType) => {
@@ -16,8 +21,8 @@ export const useLocationForm = () => {
   }
 
   // 類型驗證規則
-  const typeRules = () => ({
-    type: [{ required: true, message: '請選擇類型', trigger: 'blur' }],
+  const typeRules = (requiredText: string) => ({
+    type: [{ required: true, message: requiredText, trigger: 'blur' }],
   })
 
   return {

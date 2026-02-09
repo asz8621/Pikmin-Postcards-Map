@@ -2,6 +2,7 @@
 import { storeToRefs } from 'pinia'
 import { useModalStore } from '@/stores/useModalStore'
 import { useInfoStore } from '@/stores/useInfoStore'
+import { useLanguage } from '@/composables/useLanguage'
 import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import { locationApi } from '@/services'
@@ -13,18 +14,20 @@ const { modalStates, modalData, modalLoading } = storeToRefs(modalStore)
 const infoStore = useInfoStore()
 const { fetchUserData } = infoStore
 
+const { t } = useLanguage()
+
 const { handleError } = useApiError()
 
 const handleDeleteLocation = async () => {
   if (modalLoading.value) return
 
   if (!modalData.value.id) {
-    errorMsg('資料異常，請重新整理後再試')
+    errorMsg(t('message.dataError'))
     return
   }
 
   if (modalData.value.id === 1) {
-    errorMsg('Demo 資料無法刪除，請自行新增資料後再操作')
+    errorMsg(t('message.demoDataDeleteFailed'))
     return
   }
 
@@ -33,10 +36,10 @@ const handleDeleteLocation = async () => {
   try {
     const res = await locationApi.deleteLocation(modalData.value.id)
     await fetchUserData()
-    successMsg(res?.data.message || '刪除成功')
+    successMsg(t('message.delete'))
     closeModal('deleteLocation')
   } catch (err) {
-    handleError(err, '刪除失敗，請稍後再試')
+    handleError(err, t('message.deleteFailed'))
   } finally {
     modalLoading.value = false
   }
@@ -49,12 +52,12 @@ const handleDeleteLocation = async () => {
     :mask-closable="false"
     :closable="false"
     preset="card"
-    title="刪除點位"
+    :title="t('modal.deleteLocation')"
   >
     <p>
-      <span>你確定要刪除此點位資料嗎？</span>
+      <span>{{ t('message.confirmDeleteLocationTip') }}</span>
       <br />
-      <n-text type="error">此操作無法復原，請謹慎操作。</n-text>
+      <n-text type="error">{{ t('message.irreversibleOperationTip') }}</n-text>
     </p>
 
     <template #footer>
@@ -65,9 +68,11 @@ const handleDeleteLocation = async () => {
           :loading="modalLoading"
           @click="handleDeleteLocation"
         >
-          確定刪除
+          {{ t('common.confirmDelete') }}
         </n-button>
-        <n-button @click="closeModal('deleteLocation')" :disabled="modalLoading"> 取消 </n-button>
+        <n-button @click="closeModal('deleteLocation')" :disabled="modalLoading">
+          {{ t('common.cancel') }}
+        </n-button>
       </n-space>
     </template>
   </n-modal>
