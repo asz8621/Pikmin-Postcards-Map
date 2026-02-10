@@ -19,7 +19,7 @@ const { joinRoom } = useSocketEvents()
 const { t } = useLanguage()
 
 const registerData = ref({
-  name: '',
+  username: '',
   account: '',
   password: '',
   email: '',
@@ -35,7 +35,7 @@ const validatePasswordSame = (_rule: unknown, value: string) => {
 }
 
 const rules = computed(() => ({
-  name: [{ required: true, message: t('validation.requiredName'), trigger: 'blur' }],
+  username: [{ required: true, message: t('validation.requiredName'), trigger: 'blur' }],
   account: [
     { required: true, message: t('validation.requiredAccount'), trigger: 'blur' },
     { min: 6, max: 20, message: t('validation.accountLength'), trigger: 'blur' },
@@ -74,7 +74,7 @@ const register = async () => {
     loading.value = true
 
     await authApi.userRegister({
-      name: registerData.value.name,
+      username: registerData.value.username,
       account: registerData.value.account,
       password: registerData.value.password,
       email: registerData.value.email,
@@ -121,8 +121,8 @@ onMounted(() => {
       @keydown.enter.prevent="register"
     >
       <FormInput
-        v-model="registerData.name"
-        path="name"
+        v-model="registerData.username"
+        path="username"
         :placeholder="t('validation.requiredName')"
         icon="id-card"
       />
