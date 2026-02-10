@@ -116,7 +116,6 @@ watch(
     preset="card"
     :title="t('modal.changePassword')"
   >
-    {{ formRules }}
     <n-form
       ref="passwordFormRef"
       :model="passwordForm"
