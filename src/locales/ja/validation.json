@@ -9,6 +9,7 @@
   "requiredConfirmNewPasswordAgain": "新しいパスワードをもう一度入力してください",
   "requiredCoords": "座標を入力してください",
   "requiredType": "タイプを選択してください",
+  "requiredFeatures": "ラベルを選択してください",
   "requiredErrorType": "エラーの種類を選択してください",
   "requiredDescription": "問題の説明を入力してください",
   "detailedDescription": "見つかった問題を詳しく説明してください...",
@@ -17,14 +18,9 @@
   "outOfRangeCoords": "緯度経度が適正範囲（緯度-90～90、経度-180～180）を超えています。",
   "accountLength": "アカウントは{min}〜{max}文字である必要があります",
   "passwordLength": "パスワードは8文字以上で、文字と数字を含む必要があります",
-  "passwordMismatch": "パスワードが一致しません",
-  "requiredFeatures": "ラベルを選択してください",
-  "requiredSearch": "住所、国、座標を入力してください",
-  "invalidNewPassword": "新しいパスワードには少なくとも文字と数字が含まれている必要があります",
-  "requiredConfirmNewPassword": "新しいパスワードを確認するために入力してください",
-  "minOldPassword": "古いパスワードは 8 文字以上である必要があります",
-  "invalidOldPassword": "古いパスワードには少なくとも文字と数字が含まれている必要があります",
-  "minNewPassword": "新しいパスワードは 8 文字以上である必要があります",
   "newPasswordLength": "新しいパスワードは 8 文字以上で、文字と数字を含める必要があります。",
-  "oldPasswordLength": "古いパスワードは 8 文字より長く、文字と数字を含める必要があります。"
+  "oldPasswordLength": "古いパスワードは 8 文字より長く、文字と数字を含める必要があります。",
+  "passwordMismatch": "パスワードが一致しません",
+  "requiredSearch": "住所、国、座標を入力してください",
+  "requiredConfirmNewPassword": "新しいパスワードを確認するために入力してください"
 }

@@ -22,9 +22,5 @@
   "oldPasswordLength": "舊密碼長度 8 字元以上,且需包含字母與數字",
   "passwordMismatch": "兩次密碼輸入不一致",
   "requiredSearch": "請輸入地址、國家、座標",
-  "minOldPassword": "舊密碼長度至少 8 個字符",
-  "minNewPassword": "新密碼長度至少 8 個字符",
-  "invalidOldPassword": "舊密碼必須至少包含字母與數字",
-  "invalidNewPassword": "新密碼必須至少包含字母與數字",
   "requiredConfirmNewPassword": "請輸入確認新密碼"
 }
