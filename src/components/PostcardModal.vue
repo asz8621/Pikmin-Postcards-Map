@@ -4,7 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useModalStore } from '@/stores/useModalStore'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import { formatTimezone } from '@/utils/formatDate'
-import { getTypeIcon } from '@/utils/typeIcon'
+import { getTypeIcon } from '@/utils/map'
 import { useLanguage } from '@/composables/useLanguage'
 
 const { t } = useLanguage()

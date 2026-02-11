@@ -8,10 +8,10 @@ import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import { useValidationRules } from '@/composables/useValidationRules'
 import { useFileUpload } from '@/composables/useFileUpload'
-import { useCoordinates } from '@/composables/useCoordinates'
 import { useLocationForm } from '@/composables/useLocationForm'
 import { useLanguage } from '@/composables/useLanguage'
 import { locationApi } from '@/services'
+import { getCoordinates } from '@/utils/map'
 
 interface LocationFormData {
   id?: number
@@ -35,7 +35,6 @@ const { fetchUserData } = infoStore
 const { handleError } = useApiError()
 
 const { beforeUpload, buildFormData } = useFileUpload()
-const { getCoordinates } = useCoordinates()
 const { typeOptions, typeChange } = useLocationForm()
 const { t } = useLanguage()
 

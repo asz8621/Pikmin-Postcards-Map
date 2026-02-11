@@ -6,11 +6,11 @@ import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useApiError } from '@/composables/useApiError'
 import { useFileUpload } from '@/composables/useFileUpload'
-import { useCoordinates } from '@/composables/useCoordinates'
 import { useValidationRules } from '@/composables/useValidationRules'
 import { useLocationForm } from '@/composables/useLocationForm'
 import { useLanguage } from '@/composables/useLanguage'
 import { successMsg } from '@/utils/appMessage'
+import { getCoordinates } from '@/utils/map'
 import { locationApi } from '@/services'
 
 interface UploadFormData {
@@ -33,7 +33,6 @@ const { modalStates, modalLoading } = storeToRefs(modalStore)
 const { handleError } = useApiError()
 
 const { beforeUpload, buildFormData } = useFileUpload()
-const { getCoordinates } = useCoordinates()
 const { typeOptions, typeChange } = useLocationForm()
 
 const { t } = useLanguage()

@@ -7,7 +7,7 @@ import EditLocationModal from '@/components/contribute/EditLocationModal.vue'
 import DeleteLocationModal from '@/components/contribute/DeleteLocationModal.vue'
 import { useSocketEvents } from '@/composables/useSocketEvents'
 import { useLanguage } from '@/composables/useLanguage'
-import { getTypeIcon } from '@/utils/typeIcon'
+import { getTypeIcon } from '@/utils/map'
 
 const infoStore = useInfoStore()
 const { contribute } = storeToRefs(infoStore)
