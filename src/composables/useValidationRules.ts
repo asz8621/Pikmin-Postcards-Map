@@ -27,11 +27,7 @@ export function useValidationRules(formRef?: Ref<FormInst | null>, formData?: an
   }
 
   // 定義各種驗證規則
-  const createRule = (
-    ruleType: string,
-    customMessage?: string,
-    imageUrl?: string,
-  ): ValidationRule | null => {
+  const createRule = (ruleType: string, customMessage?: string): ValidationRule | null => {
     switch (ruleType) {
       // 密碼強度驗證
       case 'passwordRegex':
@@ -88,7 +84,6 @@ export function useValidationRules(formRef?: Ref<FormInst | null>, formData?: an
           message: t('message.uploadImage'),
           validator: (_: unknown, value: UploadFile) => {
             const data = unref(formData)
-            console.log('Validating image file:', value, 'with existing image URL:', data?.image)
             const result = validateImageFile(value, data?.image)
             return result
           },
