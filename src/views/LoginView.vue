@@ -9,6 +9,7 @@ import SocialLogin from '@/components/SocialLogin.vue'
 import { useApiError } from '@/composables/useApiError'
 import { useSocketEvents } from '@/composables/useSocketEvents'
 import { useLanguage } from '@/composables/useLanguage'
+import { useValidationRules } from '@/composables/useValidationRules'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 
 const router = useRouter()
@@ -27,15 +28,14 @@ const loading = ref(false)
 const formLoading = ref(false)
 const loginFormRef = useTemplateRef('loginFormRef')
 
-const rules = computed(() => ({
-  account: [{ required: true, message: t('validation.requiredAccount'), trigger: 'blur' }],
-  password: [{ required: true, message: t('validation.requiredPassword'), trigger: 'blur' }],
-}))
-
-// 監聽語系變化，清除所有驗證錯誤訊息
-watch(locale, () => {
-  loginFormRef.value?.restoreValidation()
-})
+const { getRules, localeWatch } = useValidationRules()
+const rules = computed(() =>
+  getRules({
+    account: [{ type: 'required', message: t('validation.requiredAccount') }],
+    password: [{ type: 'required', message: t('validation.requiredPassword') }],
+  }),
+)
+localeWatch()
 
 const login = async () => {
   try {

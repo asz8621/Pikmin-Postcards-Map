@@ -5,6 +5,7 @@ import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useLanguage } from '@/composables/useLanguage'
 import { useApiError } from '@/composables/useApiError'
+import { useValidationRules } from '@/composables/useValidationRules'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import { userApi } from '@/services'
 
@@ -39,13 +40,13 @@ const clearFormData = () => {
   })
 }
 
-const userInfoRules = computed(() => ({
-  username: [{ required: true, message: t('validation.requiredName'), trigger: 'blur' }],
-  email: [
-    { required: true, message: t('validation.requiredEmail'), trigger: 'blur' },
-    { type: 'email', message: t('validation.invalidEmail'), trigger: ['blur', 'input'] },
-  ],
-}))
+const { getRules } = useValidationRules()
+const rules = computed(() =>
+  getRules({
+    username: [{ type: 'required', message: t('validation.requiredNickName') }],
+    email: [{ type: 'required', message: t('validation.requiredEmail') }, 'isEmail'],
+  }),
+)
 
 const handleUpdateUserInfo = async () => {
   if (modalLoading.value) return
@@ -111,7 +112,7 @@ watch(
     <n-form
       ref="userInfoFormRef"
       :model="userInfoForm"
-      :rules="userInfoRules"
+      :rules="rules"
       show-require-mark
       :disabled="modalLoading"
       @keydown.enter.prevent="handleUpdateUserInfo"
@@ -119,7 +120,7 @@ watch(
       <n-form-item :label="t('common.nickname')" path="username">
         <n-input
           v-model:value="userInfoForm.username"
-          :placeholder="t('validation.requiredName')"
+          :placeholder="t('validation.requiredNickName')"
         />
       </n-form-item>
       <n-form-item :label="t('common.email')" path="email">

@@ -7,6 +7,7 @@ import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import { useApiError } from '@/composables/useApiError'
 import { useSocketEvents } from '@/composables/useSocketEvents'
+import { useValidationRules } from '@/composables/useValidationRules'
 import { useLanguage } from '@/composables/useLanguage'
 import { successMsg } from '@/utils/appMessage'
 
@@ -30,42 +31,22 @@ const loading = ref(false)
 
 const registerFormRef = useTemplateRef('registerFormRef')
 
-const validatePasswordSame = (_rule: unknown, value: string) => {
-  return value === registerData.value.password
-}
+const { getRules, passwordWatch, localeWatch } = useValidationRules(registerFormRef, registerData)
 
-const rules = computed(() => ({
-  username: [{ required: true, message: t('validation.requiredName'), trigger: 'blur' }],
-  account: [
-    { required: true, message: t('validation.requiredAccount'), trigger: 'blur' },
-    { min: 6, max: 20, message: t('validation.accountLength'), trigger: 'blur' },
-  ],
-  email: [
-    { required: true, message: t('validation.requiredEmail'), trigger: 'blur' },
-    { type: 'email', message: t('validation.invalidEmail'), trigger: ['blur', 'input'] },
-  ],
-  password: [
-    { required: true, message: t('validation.requiredPassword'), trigger: 'blur' },
-    {
-      pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
-      message: t('validation.passwordLength'),
-      trigger: 'blur',
-    },
-  ],
-  confirmPassword: [
-    {
-      required: true,
-      message: t('validation.requiredConfirmPassword'),
-      trigger: ['input', 'blur'],
-    },
-    {
-      key: 'confirmPassword',
-      validator: validatePasswordSame,
-      message: t('validation.passwordMismatch'),
-      trigger: ['input', 'blur'],
-    },
-  ],
-}))
+const rules = computed(() =>
+  getRules({
+    username: [{ type: 'required', message: t('validation.requiredNickName') }],
+    account: [{ type: 'required', message: t('validation.requiredAccount') }, 'accountLength'],
+    email: [{ type: 'required', message: t('validation.requiredEmail') }, 'isEmail'],
+    password: [
+      { type: 'required', message: t('validation.requiredPassword') },
+      { type: 'passwordRegex', message: t('validation.passwordLength') },
+    ],
+    confirmPassword: ['passwordMatch'],
+  }),
+)
+passwordWatch()
+localeWatch()
 
 const register = async () => {
   try {
@@ -123,7 +104,7 @@ onMounted(() => {
       <FormInput
         v-model="registerData.username"
         path="username"
-        :placeholder="t('validation.requiredName')"
+        :placeholder="t('validation.requiredNickName')"
         icon="id-card"
       />
 
@@ -148,7 +129,6 @@ onMounted(() => {
         :placeholder="t('validation.requiredPassword')"
         icon="key"
         show-password-on="click"
-        @input="handlePasswordInput"
       />
 
       <FormInput

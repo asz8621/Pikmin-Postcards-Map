@@ -6,6 +6,7 @@ import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useApiError } from '@/composables/useApiError'
 import { successMsg, errorMsg } from '@/utils/appMessage'
+import { useValidationRules } from '@/composables/useValidationRules'
 import { useFileUpload } from '@/composables/useFileUpload'
 import { useCoordinates } from '@/composables/useCoordinates'
 import { useLocationForm } from '@/composables/useLocationForm'
@@ -33,9 +34,9 @@ const { fetchUserData } = infoStore
 
 const { handleError } = useApiError()
 
-const { imageFileRules, beforeUpload, buildFormData } = useFileUpload()
-const { coordsRules, getCoordinates } = useCoordinates()
-const { typeOptions, typeChange, typeRules } = useLocationForm()
+const { beforeUpload, buildFormData } = useFileUpload()
+const { getCoordinates } = useCoordinates()
+const { typeOptions, typeChange } = useLocationForm()
 const { t } = useLanguage()
 
 const editLocationRef = useTemplateRef('editLocationRef')
@@ -46,11 +47,14 @@ const locationFormData = ref<LocationFormData>({
   imageFile: null,
 })
 
-const rules = computed(() => ({
-  ...imageFileRules(locationFormData.value.image),
-  ...typeRules(t('validation.requiredType')),
-  ...coordsRules(),
-}))
+const { getRules } = useValidationRules(editLocationRef, locationFormData)
+const rules = computed(() =>
+  getRules({
+    type: [{ type: 'required', message: t('validation.requiredType') }],
+    coords: ['coords'],
+    imageFile: ['imgUpload'],
+  }),
+)
 
 const submitText = computed(() => {
   return locationFormData.value.image_status === 'rejected'

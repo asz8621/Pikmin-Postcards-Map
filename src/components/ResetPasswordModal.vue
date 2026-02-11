@@ -5,7 +5,7 @@ import { useInfoStore } from '@/stores/useInfoStore'
 import { useModalStore } from '@/stores/useModalStore'
 import { useAuthFlow } from '@/composables/useAuthFlow'
 import { useApiError } from '@/composables/useApiError'
-import { usePasswordValidation } from '@/composables/usePasswordValidation'
+import { useValidationRules } from '@/composables/useValidationRules'
 import { useLanguage } from '@/composables/useLanguage'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 import { userApi } from '@/services'
@@ -30,26 +30,22 @@ const passwordForm = ref({
   confirmPassword: '',
 })
 
-const { confirmPasswordRules, passwordWatch, createBasePasswordValidator } =
-  usePasswordValidation(passwordFormRef)
-
-const formRules = computed(() => ({
-  passwordOld: createBasePasswordValidator(
-    t('validation.requiredOldPassword'),
-    t('validation.minOldPassword'),
-    t('validation.invalidOldPassword'),
-  ),
-  password: createBasePasswordValidator(
-    t('validation.requiredNewPassword'),
-    t('validation.minNewPassword'),
-    t('validation.invalidNewPassword'),
-  ),
-  confirmPassword: confirmPasswordRules(
-    passwordForm.value,
-    t('validation.requiredConfirmNewPassword'),
-    t('validation.passwordMismatch'),
-  ),
-}))
+const { getRules, passwordWatch, localeWatch } = useValidationRules(passwordFormRef, passwordForm)
+const rules = computed(() =>
+  getRules({
+    passwordOld: [
+      { type: 'required', message: t('validation.requiredOldPassword') },
+      { type: 'passwordRegex', message: t('validation.oldPasswordLength') },
+    ],
+    password: [
+      { type: 'required', message: t('validation.requiredNewPassword') },
+      { type: 'passwordRegex', message: t('validation.newPasswordLength') },
+    ],
+    confirmPassword: ['passwordMatch'],
+  }),
+)
+passwordWatch()
+localeWatch()
 
 const handleResetPassword = async () => {
   if (modalLoading.value) return
@@ -90,8 +86,6 @@ const handleResetPassword = async () => {
   }
 }
 
-passwordWatch(passwordForm.value)
-
 // 關閉清除資料
 watch(
   () => modalStates.value.resetPassword,
@@ -119,7 +113,7 @@ watch(
     <n-form
       ref="passwordFormRef"
       :model="passwordForm"
-      :rules="formRules"
+      :rules="rules"
       :show-require-mark="false"
       :disabled="modalLoading"
       @keydown.enter.prevent="handleResetPassword"

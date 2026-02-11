@@ -26,21 +26,6 @@ export const useFileUpload = (options: FileUploadOptions = {}) => {
 
   const maxSizeBytes = maxSizeMB * 1024 * 1024
 
-  // 圖片驗證規則
-  const imageFileRules = (imageUrl?: string) => ({
-    imageFile: [
-      {
-        key: 'imageFile',
-        required: true,
-        validator: (_: unknown, value: UploadFile) => {
-          const result = validateImageFile(value, imageUrl)
-          return result
-        },
-        trigger: ['change', 'blur'],
-      },
-    ],
-  })
-
   // 檢查檔案格式與大小
   const validateImageFile = (file: UploadFile, imageUrl?: string): true | Error => {
     if (!file && imageUrl) return true // 沒重新上傳不驗證(編輯用)
@@ -66,7 +51,7 @@ export const useFileUpload = (options: FileUploadOptions = {}) => {
     return true
   }
 
-  // 上傳前驗證`
+  // 上傳前驗證
   const beforeUpload = (uploadData: { file: UploadFileInfo }) => {
     const file = uploadData?.file?.file as File | undefined
 
@@ -160,7 +145,7 @@ export const useFileUpload = (options: FileUploadOptions = {}) => {
   }
 
   return {
-    imageFileRules,
+    validateImageFile,
     beforeUpload,
     buildFormData,
   }

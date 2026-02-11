@@ -7,6 +7,7 @@ import { useModalStore } from '@/stores/useModalStore'
 import { useApiError } from '@/composables/useApiError'
 import { useFileUpload } from '@/composables/useFileUpload'
 import { useCoordinates } from '@/composables/useCoordinates'
+import { useValidationRules } from '@/composables/useValidationRules'
 import { useLocationForm } from '@/composables/useLocationForm'
 import { useLanguage } from '@/composables/useLanguage'
 import { successMsg } from '@/utils/appMessage'
@@ -31,9 +32,9 @@ const { modalStates, modalLoading } = storeToRefs(modalStore)
 
 const { handleError } = useApiError()
 
-const { imageFileRules, beforeUpload, buildFormData } = useFileUpload()
-const { coordsRules, getCoordinates } = useCoordinates()
-const { typeOptions, typeChange, typeRules } = useLocationForm()
+const { beforeUpload, buildFormData } = useFileUpload()
+const { getCoordinates } = useCoordinates()
+const { typeOptions, typeChange } = useLocationForm()
 
 const { t } = useLanguage()
 
@@ -45,12 +46,15 @@ const locationFormData = ref<UploadFormData>({
   coords: null,
   explore: false,
 })
+const { getRules } = useValidationRules()
 
-const rules = computed(() => ({
-  ...imageFileRules(),
-  ...typeRules(t('validation.requiredType')),
-  ...coordsRules(),
-}))
+const rules = computed(() =>
+  getRules({
+    type: [{ type: 'required', message: t('validation.requiredType') }],
+    coords: ['coords'],
+    imageFile: ['imgUpload'],
+  }),
+)
 
 const fileListClass = computed(() => {
   return locationFormData.value.imageFile ? 'uploaded-image-list has-file' : 'uploaded-image-list'

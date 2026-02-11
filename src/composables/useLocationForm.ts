@@ -20,14 +20,8 @@ export const useLocationForm = () => {
     }
   }
 
-  // 類型驗證規則
-  const typeRules = (requiredText: string) => ({
-    type: [{ required: true, message: requiredText, trigger: 'blur' }],
-  })
-
   return {
     typeOptions,
     typeChange,
-    typeRules,
   }
 }

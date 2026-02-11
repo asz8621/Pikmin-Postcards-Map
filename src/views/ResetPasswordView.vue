@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { ref, useTemplateRef, onMounted, computed } from 'vue'
+import { ref, useTemplateRef, watch, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { authApi } from '@/services'
 import AuthLayout from '@/components/AuthLayout.vue'
 import FormInput from '@/components/FormInput.vue'
 import { useApiError } from '@/composables/useApiError'
-import { usePasswordValidation } from '@/composables/usePasswordValidation'
+import { useValidationRules } from '@/composables/useValidationRules'
 import { useLanguage } from '@/composables/useLanguage'
 import { successMsg, errorMsg } from '@/utils/appMessage'
 
 const router = useRouter()
 const route = useRoute()
 
-const { t } = useLanguage()
+const { t, locale } = useLanguage()
 
 const { handleError } = useApiError()
 
@@ -29,23 +29,19 @@ const token = ref<string>('')
 const email = ref<string>('')
 const account = ref<string>('')
 
-const { createBasePasswordValidator, confirmPasswordRules, passwordWatch } =
-  usePasswordValidation(resetFormRef)
+const { getRules, passwordWatch, localeWatch } = useValidationRules(resetFormRef, resetData)
 
-const rules = computed(() => ({
-  password: createBasePasswordValidator(
-    t('validation.requiredNewPassword'),
-    t('validation.minNewPassword'),
-    t('validation.invalidNewPassword'),
-  ),
-  confirmPassword: confirmPasswordRules(
-    resetData.value,
-    t('validation.requiredConfirmNewPassword'),
-    t('validation.passwordMismatch'),
-  ),
-}))
-
-passwordWatch(resetData.value)
+const rules = computed(() =>
+  getRules({
+    password: [
+      { type: 'required', message: t('validation.requiredNewPassword') },
+      { type: 'passwordRegex', message: t('validation.newPasswordLength') },
+    ],
+    confirmPassword: ['passwordMatch'],
+  }),
+)
+passwordWatch()
+localeWatch()
 
 const resetPassword = async () => {
   try {

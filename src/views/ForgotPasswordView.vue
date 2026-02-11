@@ -7,6 +7,7 @@ import FormInput from '@/components/FormInput.vue'
 import AuthFooterTip from '@/components/AuthFooterTip.vue'
 import { useApiError } from '@/composables/useApiError'
 import { useLanguage } from '@/composables/useLanguage'
+import { useValidationRules } from '@/composables/useValidationRules'
 import { successMsg } from '@/utils/appMessage'
 
 const router = useRouter()
@@ -23,16 +24,14 @@ const forgotData = ref({
 const loading = ref(false)
 const forgotFormRef = useTemplateRef('forgotFormRef')
 
-const rules = computed(() => ({
-  account: [
-    { required: true, message: t('validation.requiredAccount'), trigger: 'blur' },
-    { min: 6, max: 20, message: t('validation.accountLength'), trigger: ['blur', 'input'] },
-  ],
-  email: [
-    { required: true, message: t('validation.requiredEmail'), trigger: 'blur' },
-    { type: 'email', message: t('validation.invalidEmail'), trigger: ['blur', 'input'] },
-  ],
-}))
+const { getRules, localeWatch } = useValidationRules(forgotFormRef)
+const rules = computed(() =>
+  getRules({
+    account: [{ type: 'required', message: t('validation.requiredAccount') }, 'accountLength'],
+    email: [{ type: 'required', message: t('validation.requiredEmail') }, 'isEmail'],
+  }),
+)
+localeWatch()
 
 const sendResetEmail = async () => {
   try {

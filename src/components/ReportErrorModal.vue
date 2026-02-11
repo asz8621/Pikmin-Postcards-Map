@@ -6,6 +6,7 @@ import { useInfoStore } from '@/stores/useInfoStore'
 import { locationApi } from '@/services'
 import { successMsg } from '@/utils/appMessage'
 import { useLanguage } from '@/composables/useLanguage'
+import { useValidationRules } from '@/composables/useValidationRules'
 import { useApiError } from '@/composables/useApiError'
 
 const modalStore = useModalStore()
@@ -39,19 +40,13 @@ const formData = ref<FormData>({
 
 const formRef = useTemplateRef('formRef')
 
-const rules = computed(() => ({
-  reportType: {
-    required: true,
-    type: 'number',
-    message: t('validation.requiredErrorType'),
-    trigger: 'change',
-  },
-  description: {
-    required: true,
-    message: t('validation.requiredDescription'),
-    trigger: 'blur',
-  },
-}))
+const { getRules } = useValidationRules()
+const rules = computed(() =>
+  getRules({
+    reportType: ['reportType'],
+    description: [{ type: 'required', message: t('validation.requiredDescription') }],
+  }),
+)
 
 // 重置表單
 const resetForm = () => {
