@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted } from 'vue'
 import { useInfoStore } from '@/stores/useInfoStore'
 import { useMapStore } from '@/stores/useMapStore'
 import { useLoadingStore } from '@/stores/useLoadingStore'
@@ -28,18 +28,28 @@ const { closeAppLoading } = loadingStore
 
 const { t } = useLanguage()
 
-const isDataReady = ref(false)
-
-Promise.all([fetchUserData(), fetchMapData()])
-  .then(() => {
-    isDataReady.value = true
-  })
-  .catch((err) => {
+const loadMapData = async () => {
+  try {
+    await fetchMapData()
+  } catch {
     errorMsg(t('message.dataLoadFailed'))
-  })
-  .finally(() => {
+  } finally {
     closeAppLoading()
-  })
+  }
+}
+
+const loadUserData = async () => {
+  try {
+    await fetchUserData()
+  } catch {
+    errorMsg(t('message.dataLoadFailed'))
+  }
+}
+
+onMounted(() => {
+  loadMapData()
+  loadUserData()
+})
 </script>
 
 <template>
@@ -56,7 +66,7 @@ Promise.all([fetchUserData(), fetchMapData()])
 
     <n-layout-content class="h-full">
       <div class="relative w-full h-full z-[1]">
-        <LeafletMap v-if="isDataReady" />
+        <LeafletMap />
       </div>
 
       <LightboxStrip />

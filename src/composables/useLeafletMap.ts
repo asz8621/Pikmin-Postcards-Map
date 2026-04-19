@@ -25,6 +25,7 @@ const createIcon = (iconPath: string) => {
 }
 
 type MapIconKey = 'location' | 'mushroom' | 'flower' | 'default'
+type CachedMarker = L.Marker & { __locationId?: number }
 
 // 地圖圖標配置
 const mapIcons: Record<MapIconKey, L.Icon> = markRaw({
@@ -43,7 +44,7 @@ const getIcon = (type: string): L.Icon => {
 }
 
 // 定位選項配置
-const locateOptions = {
+const locateOptions: L.LocateOptions = {
   setView: false, // 關閉 Leaflet 自動移動視野，避免與 handleLocationFound 中的 setView 重複觸發
   enableHighAccuracy: true, // 使用高精度定位
   timeout: 300000, // 逾時時間 30 秒
@@ -68,12 +69,77 @@ export const useLeafletMap = (options: { containerId?: string } = {}) => {
 
   const mapStore = useMapStore()
   const { map, mapData, searchResults, isLocated, isLocating } = storeToRefs(mapStore)
-  const { mapConfig, applyFilterWithView, refreshMapView } = mapStore
+  const { mapConfig, applyFilterWithView, refreshMapView, getLocationById } = mapStore
   const { defaultZoom, minZoom, maxZoom, maxBounds, maxBoundsViscosity, defaultCenter } = mapConfig
 
   const markerClusterGroup = shallowRef<L.MarkerClusterGroup | null>(null)
+  const markerCache = shallowRef<Map<number, CachedMarker>>(new Map())
+  const visibleMarkerIds = shallowRef<Set<number>>(new Set())
   const locationMarker = shallowRef<L.Marker | null>(null)
   const zoomLevel = ref(defaultZoom)
+
+  // 透過 id 快取開啟彈窗資料，避免每次都掃整包 mapAllData
+  const openLocationModal = (locationId: number) => {
+    const location = getLocationById(locationId)
+    if (location) {
+      openModal('postcard', location)
+    }
+  }
+
+  // 確保 cluster group 只建立一次
+  const ensureClusterGroup = () => {
+    const leafletMap = map.value
+    if (!leafletMap) return null
+
+    if (!markerClusterGroup.value) {
+      const clusterGroup = markRaw(L.markerClusterGroup())
+      markerClusterGroup.value = clusterGroup
+      leafletMap.addLayer(clusterGroup)
+    }
+
+    return markerClusterGroup.value
+  }
+
+  // 同步單一 marker，已存在就重用，不重建 icon 實例
+  const syncMarker = (item: LocationData) => {
+    const cachedMarker = markerCache.value.get(item.id)
+
+    if (cachedMarker) {
+      cachedMarker.setLatLng([item.lat, item.long])
+      cachedMarker.setIcon(getIcon(item.type))
+      return cachedMarker
+    }
+
+    const marker = L.marker([item.lat, item.long], {
+      icon: getIcon(item.type),
+    }) as CachedMarker
+
+    marker.__locationId = item.id
+    marker.on('click', () => {
+      if (marker.__locationId !== undefined) {
+        openLocationModal(marker.__locationId)
+      }
+    })
+
+    markerCache.value.set(item.id, marker)
+    return marker
+  }
+
+  // 清掉已不存在於 mapAllData 的 marker cache
+  const pruneStaleMarkers = () => {
+    const clusterGroup = markerClusterGroup.value
+
+    markerCache.value.forEach((marker, id) => {
+      if (getLocationById(id)) return
+
+      if (clusterGroup && visibleMarkerIds.value.has(id)) {
+        clusterGroup.removeLayer(marker)
+      }
+
+      markerCache.value.delete(id)
+      visibleMarkerIds.value.delete(id)
+    })
+  }
 
   // 初始化地圖
   const initMap = () => {
@@ -205,12 +271,16 @@ export const useLeafletMap = (options: { containerId?: string } = {}) => {
   // 清除標記
   const clearMarkers = () => {
     const clusterGroup = markerClusterGroup.value
-    if (!clusterGroup) return
+    if (!clusterGroup) {
+      visibleMarkerIds.value = new Set()
+      return
+    }
 
     // 清理 cluster group 內的所有 marker
     clusterGroup.clearLayers()
     map.value?.removeLayer(clusterGroup)
     markerClusterGroup.value = null
+    visibleMarkerIds.value = new Set()
   }
 
   // 渲染標記
@@ -222,22 +292,34 @@ export const useLeafletMap = (options: { containerId?: string } = {}) => {
     }
 
     try {
-      // 清除標記
-      clearMarkers()
+      const clusterGroup = ensureClusterGroup()
+      if (!clusterGroup) return
 
-      // 創建新的 cluster group
-      const clusterGroup = markRaw(L.markerClusterGroup())
-      markerClusterGroup.value = clusterGroup
+      // 清理已無效的 marker cache
+      pruneStaleMarkers()
 
-      data.forEach((item) => {
-        const marker = L.marker([item.lat, item.long], {
-          icon: getIcon(item.type),
-        })
-        marker.on('click', () => openModal('postcard', item))
-        clusterGroup.addLayer(marker)
+      const nextVisibleIds = new Set(data.map((item) => item.id))
+
+      // 清除目前已不在可視範圍內的 marker
+      visibleMarkerIds.value.forEach((id) => {
+        if (nextVisibleIds.has(id)) return
+
+        const marker = markerCache.value.get(id)
+        if (marker) {
+          clusterGroup.removeLayer(marker)
+        }
       })
 
-      leafletMap.addLayer(clusterGroup)
+      // 只新增目前還沒顯示的 marker
+      data.forEach((item) => {
+        const marker = syncMarker(item)
+
+        if (!visibleMarkerIds.value.has(item.id)) {
+          clusterGroup.addLayer(marker)
+        }
+      })
+
+      visibleMarkerIds.value = nextVisibleIds
     } catch (error) {
       errorMsg(`${t('message.markerLoadFailed')}: ${error}`)
     }
@@ -272,6 +354,8 @@ export const useLeafletMap = (options: { containerId?: string } = {}) => {
 
     // 清除標記
     clearMarkers()
+    markerCache.value.clear()
+    visibleMarkerIds.value = new Set()
 
     // 清理地圖事件和實例
     const leafletMap = map.value
