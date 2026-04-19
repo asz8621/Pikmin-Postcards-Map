@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue'
+import { onMounted, onBeforeUnmount, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '@/stores/useMapStore'
 import { useInfoStore } from '@/stores/useInfoStore'
@@ -50,8 +50,16 @@ useSocketListener('location', handleLocationSocket as (...args: unknown[]) => vo
 
 onMounted(() => {
   initMap()
-  joinRoom('map', userData.value?.id || null)
 })
+
+watch(
+  () => userData.value?.id,
+  (userId) => {
+    if (userId) {
+      joinRoom('map', userId)
+    }
+  },
+)
 
 onBeforeUnmount(() => {
   cleanupMap()
