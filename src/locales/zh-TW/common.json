@@ -27,6 +27,7 @@
   "description": "問題描述",
   "time": "時間",
   "location": "位置",
+  "contributor": "貢獻者",
   "myContribute": "我的貢獻",
   "all": "全部",
   "approved": "已通過",

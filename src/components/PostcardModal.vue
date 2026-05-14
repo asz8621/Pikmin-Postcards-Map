@@ -133,6 +133,10 @@ const onError = () => errorMsg(t('message.copyFailed'))
             </n-button>
           </div>
         </div>
+
+        <div class="flex flex-col italic text-end text-gray-500 mt-auto">
+          <span>{{ t('common.contributor') }}：{{ modalData?.username }}</span>
+        </div>
       </div>
     </div>
 
