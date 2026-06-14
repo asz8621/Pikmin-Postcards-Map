@@ -66,7 +66,9 @@ const login = async () => {
 }
 
 const generateRandomState = () => {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+  const bytes = new Uint8Array(16)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
 const capitalizeFirstLetter = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
@@ -79,7 +81,7 @@ const initiateOAuth = (provider: 'google' | 'facebook') => {
   try {
     // 產生隨機 state 防 CSRF
     const state = generateRandomState()
-    localStorage.setItem('oauth_state', state)
+    sessionStorage.setItem('oauth_state', state)
 
     // 跳轉到後端的 OAuth 端點 (注意使用完整的後端 URL)
     const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3006/api/v1'

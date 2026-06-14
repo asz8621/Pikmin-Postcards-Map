@@ -16,7 +16,7 @@ const router = useRouter()
 onMounted(() => {
   const urlParams = new URLSearchParams(window.location.search)
   const returnedState = urlParams.get('state')
-  const storedState = localStorage.getItem('oauth_state')
+  const storedState = sessionStorage.getItem('oauth_state')
 
   const token = urlParams.get('token')
   const error = urlParams.get('error')
@@ -44,7 +44,7 @@ onMounted(() => {
   // State 不匹配，可能是 CSRF 攻擊
   if (returnedState !== storedState) {
     errorMsg(t('message.validationError'))
-    localStorage.removeItem('oauth_state')
+    sessionStorage.removeItem('oauth_state')
     router.push('/login')
     return
   }
@@ -69,7 +69,7 @@ const checkToken = async () => {
     router.push('/login')
   } finally {
     // 清除已使用的 state
-    localStorage.removeItem('oauth_state')
+    sessionStorage.removeItem('oauth_state')
   }
 }
 </script>
