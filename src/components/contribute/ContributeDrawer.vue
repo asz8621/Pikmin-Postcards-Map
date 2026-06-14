@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import DOMPurify from 'dompurify'
 import { storeToRefs } from 'pinia'
 import { useModalStore } from '@/stores/useModalStore'
 import { useInfoStore } from '@/stores/useInfoStore'
@@ -29,14 +30,19 @@ const filteredContribute = computed(() => {
 })
 
 const checkStrategyAlert = computed(() => {
+  let raw = ''
   switch (checkStrategy.value) {
     case 'pending':
-      return t('message.pendingReviewTip')
+      raw = t('message.pendingReviewTip')
+      break
     case 'rejected':
-      return t('message.rejectedDataTip')
+      raw = t('message.rejectedDataTip')
+      break
     default:
-      return ''
+      raw = ''
   }
+  // 使用 DOMPurify 確保內容安全，允許 <strong> 和 <br> 標籤，禁止所有屬性
+  return raw ? DOMPurify.sanitize(raw, { ALLOWED_TAGS: ['strong', 'br'], ALLOWED_ATTR: [] }) : ''
 })
 
 type ImageStatus = 'approved' | 'pending' | 'rejected'
